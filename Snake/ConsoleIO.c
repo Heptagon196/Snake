@@ -90,11 +90,11 @@ void show_cursor() {
 }
 
 void set_color(int foreground_color, int background_color) {
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color_calc(foreground_color, foreground_color));
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color_calc(foreground_color, background_color));
 }
 
 void clear_color() {
-    color(WHITE, BLACK);
+    set_color(WHITE, BLACK);
 }
 
 void clear_screen() {
