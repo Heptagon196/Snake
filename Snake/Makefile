@@ -1,7 +1,7 @@
 .SILENT:
 FLAG = -Dlinux
 CC = gcc
-DEPENDENCIES = ./main.o ./ConsoleIO.o ./List.o ./Menu.o ./Snake.o
+DEPENDENCIES = ./main.o ./ConsoleIO.o ./List.o ./Menu.o ./Snake.o ./Block.o
 ifdef MAKE_RELEASE
 	FLAG += -O2
 endif
@@ -16,28 +16,32 @@ default:
 	make release
 
 snake: $(DEPENDENCIES)
-	echo "[6/6] Building snake"
+	echo "[7/7] Building snake"
 	$(CC) $(DEPENDENCIES) $(FLAG) -o snake
 
 ./main.o: ./main.c
-	echo "[1/6] Compiling main.c"
+	echo "[1/7] Compiling main.c"
 	$(CC) -c $(FLAG) $< -o ./main.o
 
 ./ConsoleIO.o: ./ConsoleIO.c
-	echo "[2/6] Compiling ConsoleIO.c"
+	echo "[2/7] Compiling ConsoleIO.c"
 	$(CC) -c $(FLAG) $< -o ./ConsoleIO.o
 
 ./List.o: ./List.c
-	echo "[3/6] Compiling List.c"
+	echo "[3/7] Compiling List.c"
 	$(CC) -c $(FLAG) $< -o ./List.o
 
 ./Menu.o: ./Menu.c
-	echo "[4/6] Compiling Menu.c"
+	echo "[4/7] Compiling Menu.c"
 	$(CC) -c $(FLAG) $< -o ./Menu.o
 
 ./Snake.o: ./Snake.c
-	echo "[5/6] Compiling Snake.c"
+	echo "[5/7] Compiling Snake.c"
 	$(CC) -c $(FLAG) $< -o ./Snake.o
+
+./Block.o: ./Block.c
+	echo "[5/7] Compiling Block.c"
+	$(CC) -c $(FLAG) $< -o ./Block.o
 
 clean:
 	echo "Cleaning files"

@@ -4,13 +4,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-struct Node {
+typedef struct Node {
     struct Node* next_node;
     struct Node* prev_node;
     void* value; // use void* to store any type of variables
-};
-
-typedef struct Node ListNode;
+} ListNode;
 
 // type of a function that is called to destroy a list node when destroying a list
 typedef void destroy_func(void* value);
