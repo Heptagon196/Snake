@@ -8,15 +8,16 @@
 
 typedef struct {
     int x, y;
-} SnakeBody;
+} Pos;
 
 #define SNAKE_MAP_WIDTH (SCREEN_WIDTH / 2)
 #define SNAKE_MAP_HEIGHT (SCREEN_HEIGHT)
 
 typedef struct {
     List* snake;
-    List* block_types;
+    List* random_portals;
     const BlockType* game_map[SNAKE_MAP_WIDTH + 2][SNAKE_MAP_HEIGHT + 2];
+    Pos transport_to[SNAKE_MAP_WIDTH + 2][SNAKE_MAP_HEIGHT + 2];
     double speed;
     const char* filename;
 } SnakeGameData;

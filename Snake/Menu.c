@@ -17,18 +17,22 @@ void destroy_option(void* val) {
 void print_outline() {
     set_color(WHITE, GREEN);
     move_cursor(1, 1);
-    for (int i = 1; i <= SCREEN_WIDTH; i ++) {
-        putchar(' ');
+    printf("╔");
+    for (int i = 2; i <= SCREEN_WIDTH - 1; i ++) {
+        printf("═");
     }
+    printf("╗");
     move_cursor(1, SCREEN_HEIGHT);
-    for (int i = 1; i <= SCREEN_WIDTH; i ++) {
-        putchar(' ');
+    printf("╚");
+    for (int i = 2; i <= SCREEN_WIDTH - 1; i ++) {
+        printf("═");
     }
-    for (int i = 1; i <= SCREEN_HEIGHT; i ++) {
+    printf("╝");
+    for (int i = 2; i <= SCREEN_HEIGHT - 1; i ++) {
         move_cursor(1, i);
-        printf("  ");
+        printf("║ ");
         move_cursor(SCREEN_WIDTH / 2, i);
-        printf("  ");
+        printf(" ║");
     }
 }
 

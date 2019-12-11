@@ -2,28 +2,36 @@
 
 const BlockType empty_block = {WHITE, WHITE, "  "};
 const BlockType wall_block = {WHITE, YELLOW, "  "};
+
+// random_portal_block 随机传送
+// portal_block 定向传送
+#if defined(linux) || defined(__APPLE__)
+const BlockType random_portal_block = {PURPLE, WHITE, "◆ "};
+const BlockType portal_block = {CYAN, WHITE, "◆ "};
+const BlockType food_block = {RED, WHITE, "● "};
+#else
+const BlockType random_portal_block = {PURPLE, WHITE, "◆"};
+const BlockType portal_block = {CYAN, WHITE, "◆"};
+const BlockType food_block = {RED, WHITE, "●"};
+#endif
+
 const BlockType snake_head_block = {WHITE, BLUE, "  "};
 const BlockType snake_body_block = {WHITE, GREEN, "  "};
-const BlockType food_block = {WHITE, RED, "  "};
 
 // random integer from 1 to m
 int randint(int m) {
     return ((int)((double) rand() / RAND_MAX * (m - 1) + 0.5) + 1);
 }
 
-SnakeBody* new_snake_body(int x, int y) {
-    SnakeBody* new_body = (SnakeBody*)malloc(sizeof(SnakeBody));
+Pos* new_snake_body(int x, int y) {
+    Pos* new_body = (Pos*)malloc(sizeof(Pos));
     new_body->x = x;
     new_body->y = y;
     return new_body;
 }
 
-void destroy_snake_body(void* val) {
-    free((SnakeBody*)val);
-}
-
-void destroy_block_type(void* val) {
-    free((BlockType*)val);
+void destroy_pos(void* val) {
+    free((Pos*)val);
 }
 
 void load_snake_map(SnakeGameData* data) {
@@ -36,6 +44,22 @@ void load_snake_map(SnakeGameData* data) {
             fscanf(fp, "%d %d", &x, &y);
             data->game_map[x][y] = &wall_block;
         }
+        if (operation == 2) {
+            int x, y;
+            fscanf(fp, "%d %d", &x, &y);
+            data->game_map[x][y] = &random_portal_block;
+            Pos* new_portal = (Pos*)malloc(sizeof(Pos));
+            new_portal->x = x;
+            new_portal->y = y;
+            list_append(data->random_portals, new_portal);
+        }
+        if (operation == 3) {
+            int x1, y1, x2, y2;
+            fscanf(fp, "%d %d %d %d", &x1, &y1, &x2, &y2);
+            data->game_map[x1][y1] = data->game_map[x2][y2] = &portal_block;
+            data->transport_to[x1][y1] = (Pos){x2, y2};
+            data->transport_to[x2][y2] = (Pos){x1, y1};
+        }
     }
     fclose(fp);
 }
@@ -47,6 +71,12 @@ void save_snake_map(SnakeGameData* data) {
             if (data->game_map[i][j] == &wall_block) {
                 fprintf(fp, "1 %d %d\n", i, j);
             }
+            if (data->game_map[i][j] == &random_portal_block) {
+                fprintf(fp, "2 %d %d\n", i, j);
+            }
+            if (data->game_map[i][j] == &portal_block) {
+                fprintf(fp, "3 %d %d %d %d\n", i, j, data->transport_to[i][j].x, data->transport_to[i][j].y);
+            }
         }
     }
     fclose(fp);
@@ -54,18 +84,22 @@ void save_snake_map(SnakeGameData* data) {
 
 void init_snake_game_data(SnakeGameData* data, const char* filename) {
     data->snake = (List*)malloc(sizeof(List));
+    data->random_portals = (List*)malloc(sizeof(List));
     data->speed = 0.15;
     data->filename = filename;
-    init_list(data->snake, destroy_snake_body);
+    init_list(data->snake, destroy_pos);
+    init_list(data->random_portals, destroy_pos);
     for (int i = 0; i < SNAKE_MAP_WIDTH + 2; i ++) {
         for (int j = 0; j < SNAKE_MAP_HEIGHT + 2; j ++) {
             data->game_map[i][j] = &empty_block;
         }
     }
+    memset(data->transport_to, 0, sizeof(data->transport_to));
 }
 
 void destroy_snake_game_data(SnakeGameData* data) {
     destroy_list(data->snake);
+    destroy_list(data->random_portals);
     free(data);
 }
 
@@ -93,18 +127,18 @@ void generate_food(SnakeGameData* data) {
 }
 
 void add_snake_body(SnakeGameData* data, int x, int y) {
-    SnakeBody* new_body = (SnakeBody*)malloc(sizeof(SnakeBody));
+    Pos* new_body = (Pos*)malloc(sizeof(Pos));
     new_body->x = x;
     new_body->y = y;
     data->game_map[x][y] = &wall_block;
     list_append(data->snake, new_body);
 }
 
-#define SNAKEBODY_TAIL ((SnakeBody*)data->snake->tail->value)
-#define SNAKEBODY_HEAD ((SnakeBody*)data->snake->head->value)
+#define SNAKEBODY_TAIL ((Pos*)data->snake->tail->value)
+#define SNAKEBODY_HEAD ((Pos*)data->snake->head->value)
 
 void move_head_to(SnakeGameData* data, int x, int y) {
-    SnakeBody* tail = SNAKEBODY_TAIL;
+    Pos* tail = SNAKEBODY_TAIL;
     int hide_x = tail->x;
     int hide_y = tail->y;
     data->game_map[tail->x][tail->y] = &empty_block;
@@ -124,7 +158,7 @@ void move_head_to(SnakeGameData* data, int x, int y) {
         data->snake->tail = next_tail_node;
         data->snake->head = last_tail_node;
     }
-    show_block(&empty_block, hide_x, hide_y);
+    show_block(data->game_map[hide_x][hide_y], hide_x, hide_y);
 }
 
 void start_snake_game(SnakeGameData* data) {
@@ -163,6 +197,7 @@ void start_snake_game(SnakeGameData* data) {
         if (ch == 'q') {
             break;
         }
+        START_MOVE:;
         int backup_x = head_pos_x;
         int backup_y = head_pos_y;
         if (ch == 'a') {
@@ -179,6 +214,18 @@ void start_snake_game(SnakeGameData* data) {
         }
         if (data->game_map[head_pos_x][head_pos_y] == &wall_block) {
             break;
+        }
+        if (data->game_map[head_pos_x][head_pos_y] == &random_portal_block) {
+            Pos* transport_to = (Pos*)get_list_val(data->random_portals, randint(data->random_portals->size) - 1);
+            head_pos_x = transport_to->x;
+            head_pos_y = transport_to->y;
+            goto START_MOVE;
+        }
+        if (data->game_map[head_pos_x][head_pos_y] == &portal_block) {
+            Pos transport_to = data->transport_to[head_pos_x][head_pos_y];
+            head_pos_x = transport_to.x;
+            head_pos_y = transport_to.y;
+            goto START_MOVE;
         }
         if (head_pos_x != backup_x || head_pos_y != backup_y) {
             int last_tail_x = SNAKEBODY_TAIL->x;
@@ -214,6 +261,8 @@ void edit_snake_map(SnakeGameData* data) {
     }
     show_block(&snake_head_block, pos_x, pos_y);
 
+    Pos portal = {-1, -1};
+
     int ch;
     while (true) {
         move_cursor(1, 21);
@@ -235,6 +284,18 @@ void edit_snake_map(SnakeGameData* data) {
         }
         if (ch == 'w') {
             pos_y --;
+        }
+        if (pos_x == 0) {
+            pos_x = SNAKE_MAP_WIDTH;
+        }
+        if (pos_x == SNAKE_MAP_WIDTH + 1) {
+            pos_x = 1;
+        }
+        if (pos_y == 0) {
+            pos_y = SNAKE_MAP_HEIGHT;
+        }
+        if (pos_y == SNAKE_MAP_HEIGHT + 1) {
+            pos_y = 1;
         }
         if (ch == 'h') {
             for (int i = 2; i <= pos_x - 1; i ++) {
@@ -264,12 +325,25 @@ void edit_snake_map(SnakeGameData* data) {
         show_block(&snake_head_block, pos_x, pos_y);
         if (ch == '0') {
             data->game_map[pos_x][pos_y] = &empty_block;
-            show_block(data->game_map[pos_x][pos_y], pos_x, pos_y);
-        }
-        if (ch == '1') {
+        } else if (ch == '1') {
             data->game_map[pos_x][pos_y] = &wall_block;
-            show_block(data->game_map[pos_x][pos_y], pos_x, pos_y);
+        } else if (ch == '2') {
+            data->game_map[pos_x][pos_y] = &random_portal_block;
+        } else if (ch == '3') {
+            data->game_map[pos_x][pos_y] = &portal_block;
+            if (portal.x == -1 && portal.y == -1) {
+                portal.x = pos_x;
+                portal.y = pos_y;
+            } else {
+                data->transport_to[portal.x][portal.y] = (Pos){pos_x, pos_y};
+                data->transport_to[pos_x][pos_y] = (Pos){portal.x, portal.y};
+                portal.x = -1;
+                portal.y = -1;
+            }
+        } else {
+            continue;
         }
+        show_block(data->game_map[pos_x][pos_y], pos_x, pos_y);
     }
     show_cursor();
 }
