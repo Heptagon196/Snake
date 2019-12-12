@@ -18,10 +18,36 @@ const BlockType food_block = {RED, WHITE, "●"};
 const BlockType snake_head_block = {WHITE, BLUE, "  "};
 const BlockType snake_body_block = {WHITE, GREEN, "  "};
 
-// random integer from 1 to m
+// random integer from 0 to m - 1
 int randint(int m) {
-    return ((int)((double) rand() / RAND_MAX * (m - 1) + 0.5) + 1);
+    return rand() % m;
 }
+
+// return the key that user has pressed in given seconds. If there's no keys that are pressed, return 0;
+int read_in_seconds(double lasting_time) {
+    double last_time_point = get_time();
+    char last_ch = 0;
+    while (kbhit()) {
+        last_ch = getch();
+    }
+    while (!kbhit() && (get_time() - last_time_point < lasting_time)) {
+        Sleep(20);
+#if defined(linux) || defined(__APPLE__)
+        last_time_point -= 0.02;
+#endif
+    }
+    if (!kbhit()) {
+        return last_ch;
+    }
+    while (get_time() - last_time_point < lasting_time) {
+        Sleep(20);
+#if defined(linux) || defined(__APPLE__)
+        last_time_point -= 0.02;
+#endif
+    }
+    return getch();
+}
+
 
 Pos* new_snake_body(int x, int y) {
     Pos* new_body = (Pos*)malloc(sizeof(Pos));
@@ -117,8 +143,8 @@ int food_pos_x, food_pos_y;
 
 void get_random_pos(SnakeGameData* data, int* x, int* y) {
     do {
-        *x = randint(SNAKE_MAP_WIDTH);
-        *y = randint(SNAKE_MAP_HEIGHT);
+        *x = randint(SNAKE_MAP_WIDTH) + 1;
+        *y = randint(SNAKE_MAP_HEIGHT) + 1;
     } while (data->game_map[*x][*y] != &empty_block);
 }
 
@@ -179,7 +205,7 @@ void start_snake_game(SnakeGameData* data) {
     show_block(&food_block, food_pos_x, food_pos_y);
     show_block(&snake_head_block, SNAKEBODY_HEAD->x, SNAKEBODY_HEAD->y);
 
-    int ch = "wasd"[randint(4) - 1];
+    int ch = "wasd"[randint(4)];
     int last_ch = ch;
     while (true) {
         move_cursor(1, 21);
@@ -216,7 +242,7 @@ void start_snake_game(SnakeGameData* data) {
             break;
         }
         if (data->game_map[head_pos_x][head_pos_y] == &random_portal_block) {
-            Pos* transport_to = (Pos*)get_list_val(data->random_portals, randint(data->random_portals->size) - 1);
+            Pos* transport_to = (Pos*)get_list_val(data->random_portals, randint(data->random_portals->size));
             head_pos_x = transport_to->x;
             head_pos_y = transport_to->y;
             goto START_MOVE;

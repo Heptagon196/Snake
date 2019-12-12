@@ -47,6 +47,19 @@ void list_append(List* lst, void* val) {
     lst->size ++;
 }
 
+void list_delete(List* lst, int pos) {
+    ListNode* cur = list_get(lst, pos);
+    if (cur->prev_node != NULL) {
+        cur->prev_node->next_node = cur->next_node;
+    }
+    if (cur->next_node != NULL) {
+        cur->next_node->prev_node = cur->prev_node;
+    }
+    lst->destroy(cur->value);
+    lst->size --;
+    free(cur);
+}
+
 void destroy_list(List* lst) {
     ListNode* cur = lst->head;
     while (cur != NULL) {

@@ -31,6 +31,7 @@
 
 bool kbhit(); // check if any key is pressed
 int getch(); // get the key which the user has pressed
+#define Sleep(x) usleep((x) * 1000)
 
 #else
 
@@ -65,7 +66,6 @@ void hide_cursor();
 void show_cursor();
 void set_color(int foreground_color, int background_color); // set the foreground and background color
 double get_time(); // get the time the program has run for
-int read_in_seconds(double lasting_time); // return the key that user has pressed in given seconds. If there's no keys that are pressed, return 0;
 void clear_screen();
 void clear_color(); // reset the output color
 

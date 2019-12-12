@@ -106,21 +106,3 @@ void clear_screen() {
 double get_time() {
     return (double) clock() / CLOCKS_PER_SEC;
 }
-
-int read_in_seconds(double lasting_time) {
-    double last_time_point = get_time();
-    while (kbhit()) {
-        getch();
-    }
-    while (!kbhit() && (get_time() - last_time_point < lasting_time)) {
-        continue;
-    }
-    if (!kbhit()) {
-        return 0;
-    }
-    while (get_time() - last_time_point < lasting_time) {
-        continue;
-    }
-    return getch();
-}
-

@@ -23,6 +23,7 @@ typedef struct {
 void init_list(List* lst, destroy_func func);
 ListNode* list_get(List* lst, int pos); // get a node at pos
 void list_append(List* lst, void* val);
+void list_delete(List* lst, int pos);
 void* get_list_val(List* lst, int pos);
 void destroy_list(List* lst);
 #define get_list_val(lst, pos) list_get(lst, pos)->value
