@@ -29,7 +29,7 @@ char* input_box(const char* message, int max_length) {
         if ((ch == '\n' || ch == '\r') && cnt != 0) {
             break;
         }
-        if (ch == 127) {
+        if (ch == 127 || ch == 8) {
             if (cnt >= 1) {
                 move_cursor_origin(top_left_x + 6 + cnt - 1, top_left_y + 7);
                 putchar(' ');
