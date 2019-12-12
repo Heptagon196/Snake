@@ -9,10 +9,12 @@ const BlockType wall_block = {WHITE, YELLOW, "  "};
 const BlockType random_portal_block = {MAGENTA, WHITE, "◆ "};
 const BlockType portal_block = {CYAN, WHITE, "◆ "};
 const BlockType food_block = {RED, WHITE, "● "};
+const BlockType eraser_block = {LIGHT_BLUE, WHITE, "▲ "};
 #else
 const BlockType random_portal_block = {MAGENTA, WHITE, "◆"};
 const BlockType portal_block = {CYAN, WHITE, "◆"};
 const BlockType food_block = {RED, WHITE, "●"};
+const BlockType eraser_block = {LIGHT_BLUE, WHITE, "▲"};
 #endif
 
 const BlockType snake_head_block = {WHITE, BLUE, "  "};
@@ -139,18 +141,32 @@ void init_snake_game_map(SnakeGameData* data) {
     load_snake_map(data);
 }
 
-int food_pos_x, food_pos_y;
-
-void get_random_pos(SnakeGameData* data, int* x, int* y) {
+Pos get_random_pos(SnakeGameData* data) {
+    Pos ans;
     do {
-        *x = randint(SNAKE_MAP_WIDTH) + 1;
-        *y = randint(SNAKE_MAP_HEIGHT) + 1;
-    } while (data->game_map[*x][*y] != &empty_block);
+        ans.x = randint(SNAKE_MAP_WIDTH) + 1;
+        ans.y = randint(SNAKE_MAP_HEIGHT) + 1;
+    } while (data->game_map[ans.x][ans.y] != &empty_block);
+    return ans;
+}
+
+void generate_eraser(SnakeGameData* data) {
+    Pos p = get_random_pos(data);
+    data->game_map[p.x][p.y] = &eraser_block;
+    show_block(&eraser_block, p.x, p.y);
 }
 
 void generate_food(SnakeGameData* data) {
-    get_random_pos(data, &food_pos_x, &food_pos_y);
+    Pos p = get_random_pos(data);
+    data->game_map[p.x][p.y] = &food_block;
+    show_block(&food_block, p.x, p.y);
+    if (!randint(5)) {
+        generate_eraser(data);
+    }
 }
+
+#define SNAKEBODY_TAIL ((Pos*)data->snake->tail->value)
+#define SNAKEBODY_HEAD ((Pos*)data->snake->head->value)
 
 void add_snake_body(SnakeGameData* data, int x, int y) {
     Pos* new_body = (Pos*)malloc(sizeof(Pos));
@@ -158,10 +174,15 @@ void add_snake_body(SnakeGameData* data, int x, int y) {
     new_body->y = y;
     data->game_map[x][y] = &wall_block;
     list_append(data->snake, new_body);
+    show_block(&snake_body_block, x, y);
 }
 
-#define SNAKEBODY_TAIL ((Pos*)data->snake->tail->value)
-#define SNAKEBODY_HEAD ((Pos*)data->snake->head->value)
+void pop_snake_body(SnakeGameData* data) {
+    data->game_map[SNAKEBODY_TAIL->x][SNAKEBODY_TAIL->y] = &empty_block;
+    show_block(&empty_block, SNAKEBODY_TAIL->x, SNAKEBODY_TAIL->y);
+    set_color(BLACK, WHITE);
+    list_delete(data->snake, data->snake->size - 1);
+}
 
 void move_head_to(SnakeGameData* data, int x, int y) {
     Pos* tail = SNAKEBODY_TAIL;
@@ -191,19 +212,17 @@ void start_snake_game(SnakeGameData* data) {
     clear_screen();
     hide_cursor();
 
-    generate_food(data);
-
-    int head_pos_x, head_pos_y;
-    get_random_pos(data, &head_pos_x, &head_pos_y);
-    add_snake_body(data, head_pos_x, head_pos_y);
+    Pos head_pos = get_random_pos(data);
+    add_snake_body(data, head_pos.x, head_pos.y);
 
     for (int i = 1; i <= SNAKE_MAP_WIDTH; i ++) {
         for (int j = 1; j <= SNAKE_MAP_HEIGHT; j ++) {
             show_block(data->game_map[i][j], i, j);
         }
     }
-    show_block(&food_block, food_pos_x, food_pos_y);
+
     show_block(&snake_head_block, SNAKEBODY_HEAD->x, SNAKEBODY_HEAD->y);
+    generate_food(data);
 
     int ch = "wasd"[randint(4)];
     int last_ch = ch;
@@ -224,44 +243,50 @@ void start_snake_game(SnakeGameData* data) {
             break;
         }
         START_MOVE:;
-        int backup_x = head_pos_x;
-        int backup_y = head_pos_y;
+        int backup_x = head_pos.x;
+        int backup_y = head_pos.y;
         if (ch == 'a') {
-            head_pos_x --;
+            head_pos.x --;
         }
         if (ch == 'd') {
-            head_pos_x ++;
+            head_pos.x ++;
         }
         if (ch == 's') {
-            head_pos_y ++;
+            head_pos.y ++;
         }
         if (ch == 'w') {
-            head_pos_y --;
+            head_pos.y --;
         }
-        if (data->game_map[head_pos_x][head_pos_y] == &wall_block) {
+        if (data->game_map[head_pos.x][head_pos.y] == &wall_block) {
             break;
         }
-        if (data->game_map[head_pos_x][head_pos_y] == &random_portal_block) {
+        if (data->game_map[head_pos.x][head_pos.y] == &random_portal_block) {
             Pos* transport_to = (Pos*)get_list_val(data->random_portals, randint(data->random_portals->size));
-            head_pos_x = transport_to->x;
-            head_pos_y = transport_to->y;
+            head_pos.x = transport_to->x;
+            head_pos.y = transport_to->y;
             goto START_MOVE;
         }
-        if (data->game_map[head_pos_x][head_pos_y] == &portal_block) {
-            Pos transport_to = data->transport_to[head_pos_x][head_pos_y];
-            head_pos_x = transport_to.x;
-            head_pos_y = transport_to.y;
+        if (data->game_map[head_pos.x][head_pos.y] == &portal_block) {
+            Pos transport_to = data->transport_to[head_pos.x][head_pos.y];
+            head_pos.x = transport_to.x;
+            head_pos.y = transport_to.y;
             goto START_MOVE;
         }
-        if (head_pos_x != backup_x || head_pos_y != backup_y) {
+        if (head_pos.x != backup_x || head_pos.y != backup_y) {
             int last_tail_x = SNAKEBODY_TAIL->x;
             int last_tail_y = SNAKEBODY_TAIL->y;
-            move_head_to(data, head_pos_x, head_pos_y);
-            if (head_pos_x == food_pos_x && head_pos_y == food_pos_y) {
+            if (data->game_map[head_pos.x][head_pos.y] == &food_block) {
+                move_head_to(data, head_pos.x, head_pos.y);
                 add_snake_body(data, last_tail_x, last_tail_y);
-                show_block(&snake_body_block, SNAKEBODY_TAIL->x, SNAKEBODY_TAIL->y);
                 generate_food(data);
-                show_block(&food_block, food_pos_x, food_pos_y);
+            } else if (data->game_map[head_pos.x][head_pos.y] == &eraser_block) {
+                if (data->snake->size <= 1) {
+                    break;
+                }
+                move_head_to(data, head_pos.x, head_pos.y);
+                pop_snake_body(data);
+            } else {
+                move_head_to(data, head_pos.x, head_pos.y);
             }
         }
     }

@@ -9,7 +9,7 @@ void init_list(List* lst, destroy_func* func) {
 }
 
 ListNode* list_get(List* lst, int pos) {
-    if (pos >= lst->size) {
+    if (pos >= lst->size || pos < 0) {
         fprintf(stderr, "Error: Unable to get a value at pos %d in a list of size %d.\n", pos, lst->size);
         return NULL;
     }
@@ -51,9 +51,13 @@ void list_delete(List* lst, int pos) {
     ListNode* cur = list_get(lst, pos);
     if (cur->prev_node != NULL) {
         cur->prev_node->next_node = cur->next_node;
+    } else {
+        lst->head = cur->next_node;
     }
     if (cur->next_node != NULL) {
         cur->next_node->prev_node = cur->prev_node;
+    } else {
+        lst->tail = cur->prev_node;
     }
     lst->destroy(cur->value);
     lst->size --;
