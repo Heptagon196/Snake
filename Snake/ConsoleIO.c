@@ -56,7 +56,7 @@ void show_cursor() {
 }
 
 void set_color(int foreground_color, int background_color) {
-    printf("\033[%dm\033[%dm", background_color + 40, foreground_color + 30);
+    printf("\033[%dm\033[%dm", background_color + 10, foreground_color);
 }
 
 void clear_screen() {

@@ -12,14 +12,22 @@
 #include <fcntl.h>
 #include <time.h>
 
-#define BLACK 0
-#define BLUE 4
-#define GREEN 6
-#define CYAN 2
-#define RED 1
-#define PURPLE 5
-#define YELLOW 3
-#define WHITE 7
+#define BLACK 30
+#define RED 31
+#define GREEN 32
+#define YELLOW 33
+#define BLUE 34
+#define MAGENTA 35
+#define CYAN 36
+#define LIGHT_GRAY 37
+#define DARK_GRAY 90
+#define LIGHT_RED 91
+#define LIGHT_GREEN 92
+#define LIGHT_YELLOW 93
+#define LIGHT_BLUE 94
+#define LIGHT_MAGENTA 95
+#define LIGHT_CYAN 96
+#define WHITE 97
 
 bool kbhit(); // check if any key is pressed
 int getch(); // get the key which the user has pressed
@@ -29,14 +37,23 @@ int getch(); // get the key which the user has pressed
 #include <conio.h>
 #include <windows.h>
 #include <time.h>
-#define BLACK 8
-#define BLUE 9
-#define GREEN 10
-#define CYAN 11
-#define RED 12
-#define PURPLE 13
-#define YELLOW 14
-#define WHITE 15
+
+#define BLACK 0
+#define RED 4
+#define GREEN 2
+#define YELLOW 6
+#define BLUE 1
+#define MAGENTA 5
+#define CYAN 3
+#define LIGHT_GRAY 15
+#define DARK_GRAY 8
+#define LIGHT_RED 12
+#define LIGHT_GREEN 10
+#define LIGHT_YELLOW 14
+#define LIGHT_BLUE 9
+#define LIGHT_MAGENTA 13
+#define LIGHT_CYAN 11
+#define WHITE 7
 
 #endif
 

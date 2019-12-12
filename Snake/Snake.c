@@ -6,11 +6,11 @@ const BlockType wall_block = {WHITE, YELLOW, "  "};
 // random_portal_block 随机传送
 // portal_block 定向传送
 #if defined(linux) || defined(__APPLE__)
-const BlockType random_portal_block = {PURPLE, WHITE, "◆ "};
+const BlockType random_portal_block = {MAGENTA, WHITE, "◆ "};
 const BlockType portal_block = {CYAN, WHITE, "◆ "};
 const BlockType food_block = {RED, WHITE, "● "};
 #else
-const BlockType random_portal_block = {PURPLE, WHITE, "◆"};
+const BlockType random_portal_block = {MAGENTA, WHITE, "◆"};
 const BlockType portal_block = {CYAN, WHITE, "◆"};
 const BlockType food_block = {RED, WHITE, "●"};
 #endif
