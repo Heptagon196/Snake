@@ -1,6 +1,6 @@
 #include "Snake.h"
 
-#define min(a, b) ((a) > (b) ? (b) : (a))
+#define Min(a, b) ((a) > (b) ? (b) : (a))
 
 const BlockType empty_block = {WHITE, WHITE, "  "};
 const BlockType wall_block = {WHITE, YELLOW, "  "};
@@ -321,7 +321,7 @@ void start_snake_game(SnakeGameData* data) {
             // 更新进度条
             move_cursor(PROGRESSBAR_X, PROGRESSBAR_Y);
             set_color(WHITE, RED);
-            for (int i = 0; i < min(PROGRESSBAR_LEN * (get_time() - additional_food_last_shown) / data->additional_food_lasting_time, PROGRESSBAR_LEN); i ++) {
+            for (int i = 0; i < Min(PROGRESSBAR_LEN * (get_time() - additional_food_last_shown) / data->additional_food_lasting_time, PROGRESSBAR_LEN); i ++) {
                 putchar(' ');
             }
             move_cursor(PROGRESSBAR_X, PROGRESSBAR_Y - 1);
