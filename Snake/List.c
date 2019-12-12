@@ -28,22 +28,39 @@ ListNode* list_get(List* lst, int pos) {
     return cur;
 }
 
-void list_append(List* lst, void* val) {
+void list_insert(List* lst, void* val, int pos) {
     if (lst->size == 0) {
+        if (pos != 0) {
+            fprintf(stderr, "Unable to insert a value to pos %d in an empty list.\n", pos);
+            return;
+        }
         lst->head = (ListNode*)malloc(sizeof(ListNode));
         lst->tail = lst->head;
         lst->head->next_node = NULL;
         lst->head->prev_node = NULL;
         lst->head->value = val;
         lst->size ++;
-        return;
+        return ;
     }
     ListNode* new_node = (ListNode*)malloc(sizeof(ListNode));
-    new_node->next_node = NULL;
-    new_node->prev_node = lst->tail;
     new_node->value = val;
-    lst->tail->next_node = new_node;
-    lst->tail = new_node;
+    if (pos == 0) {
+        new_node->next_node = lst->head;
+        new_node->prev_node = NULL;
+        lst->head->prev_node = new_node;
+        lst->head = new_node;
+        lst->size ++;
+        return ;
+    }
+    ListNode* prev = list_get(lst, pos - 1);
+    new_node->next_node = prev->next_node;
+    new_node->prev_node = prev;
+    if (prev->next_node != NULL) {
+        prev->next_node->prev_node = new_node;
+    } else {
+        lst->tail = new_node;
+    }
+    prev->next_node = new_node;
     lst->size ++;
 }
 

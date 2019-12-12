@@ -24,6 +24,7 @@ int main() {
             destroy_snake_game_data(data);
             set_color(BLACK, WHITE);
             hide_cursor();
+            move_cursor(1, 21);
             puts("Game Over! Press any key to exit.");
             getch();
             show_cursor();

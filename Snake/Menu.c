@@ -63,6 +63,8 @@ void print_normal(Option* option, int line) {
 }
 
 int Menu(int count, ...) {
+    // 可变参数列表
+    // 将所有参数依次放入链表中
     List* options = (List*)malloc(sizeof(List));
     init_list(options, destroy_option);
     va_list params;

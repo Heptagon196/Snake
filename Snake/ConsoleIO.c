@@ -1,9 +1,10 @@
 #include "ConsoleIO.h"
 
-#if defined(linux) || defined(__APPLE__)
-// implement some functions in 'conio.h' on Windows for Linux and MacOS
+static double extra_time = 0;
 
-// using linux api
+#if defined(linux) || defined(__APPLE__)
+// 调用 linux api 实现 windows 下 conio.h 中部分函数
+
 bool kbhit() {
     struct termios oldt, newt;
     int ch;
@@ -42,9 +43,18 @@ int getch() {
      return ch;
 }
 
-// using terminal control code
+void Sleep(int s) {
+    usleep(s * 1000);
+    extra_time += (double) s / 1000.0; // linux 下 sleep 时间不会计入程序运行时间，获取运行时间时加上 extra_time 以进行修正
+}
+
+// 使用终端控制码改变颜色、移动光标
+void move_cursor_origin(int x, int y) {
+    printf("\033[%d;%dH", y, x);
+}
+
 void move_cursor(int x, int y) {
-    printf("\033[%d;%dH", y, x * 2 - 1);
+    move_cursor_origin(2 * x - 1, y);
 }
 
 void hide_cursor() {
@@ -71,12 +81,16 @@ void clear_color() {
 
 #define color_calc(fg, bg) ((fg) + 16 * (bg))
 
-// using windows api
-void move_cursor(int x, int y) {
+// 调用 windows api
+void move_cursor_origin(int x, int y) {
     COORD c;
-    c.X = x * 2 - 2;
+    c.X = x - 1;
     c.Y = y - 1;
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), c);
+}
+
+void move_cursor(int x, int y) {
+    move_cursor_origin(2 * x - 1, y);
 }
 
 void hide_cursor() {
@@ -104,5 +118,6 @@ void clear_screen() {
 #endif
 
 double get_time() {
-    return (double) clock() / CLOCKS_PER_SEC;
+    return (double) clock() / CLOCKS_PER_SEC + extra_time;
 }
+

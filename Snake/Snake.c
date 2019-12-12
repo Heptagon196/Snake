@@ -1,5 +1,7 @@
 #include "Snake.h"
 
+#define min(a, b) ((a) > (b) ? (b) : (a))
+
 const BlockType empty_block = {WHITE, WHITE, "  "};
 const BlockType wall_block = {WHITE, YELLOW, "  "};
 
@@ -10,22 +12,23 @@ const BlockType random_portal_block = {MAGENTA, WHITE, "◆ "};
 const BlockType portal_block = {CYAN, WHITE, "◆ "};
 const BlockType food_block = {RED, WHITE, "● "};
 const BlockType eraser_block = {LIGHT_BLUE, WHITE, "▲ "};
+const BlockType additional_food_block[3] = {{LIGHT_RED, WHITE, "★ "}, {LIGHT_BLUE, WHITE, "★ "}, {LIGHT_GREEN, WHITE, "★ "}};
 #else
 const BlockType random_portal_block = {MAGENTA, WHITE, "◆"};
 const BlockType portal_block = {CYAN, WHITE, "◆"};
 const BlockType food_block = {RED, WHITE, "●"};
 const BlockType eraser_block = {LIGHT_BLUE, WHITE, "▲"};
+const BlockType additional_food_block[3] = {{LIGHT_RED, WHITE, "★"}, {LIGHT_BLUE, WHITE, "★"}, {LIGHT_GREEN, WHITE, "★"}};
 #endif
 
 const BlockType snake_head_block = {WHITE, BLUE, "  "};
 const BlockType snake_body_block = {WHITE, GREEN, "  "};
 
-// random integer from 0 to m - 1
 int randint(int m) {
     return rand() % m;
 }
 
-// return the key that user has pressed in given seconds. If there's no keys that are pressed, return 0;
+// 返回给定时间内按下的键，如果没有按键，返回缓冲区最后一个按键（缓冲区无按键返回 0)
 int read_in_seconds(double lasting_time) {
     double last_time_point = get_time();
     char last_ch = 0;
@@ -34,22 +37,15 @@ int read_in_seconds(double lasting_time) {
     }
     while (!kbhit() && (get_time() - last_time_point < lasting_time)) {
         Sleep(20);
-#if defined(linux) || defined(__APPLE__)
-        last_time_point -= 0.02;
-#endif
     }
     if (!kbhit()) {
         return last_ch;
     }
     while (get_time() - last_time_point < lasting_time) {
         Sleep(20);
-#if defined(linux) || defined(__APPLE__)
-        last_time_point -= 0.02;
-#endif
     }
     return getch();
 }
-
 
 Pos* new_snake_body(int x, int y) {
     Pos* new_body = (Pos*)malloc(sizeof(Pos));
@@ -115,6 +111,11 @@ void init_snake_game_data(SnakeGameData* data, const char* filename) {
     data->random_portals = (List*)malloc(sizeof(List));
     data->speed = 0.15;
     data->filename = filename;
+    data->additional_food_state = 0;
+    data->additional_food_pos.x = -1;
+    data->additional_food_lasting_time = 7;
+    data->additional_food_generate_time = 20;
+    data->score = 0;
     init_list(data->snake, destroy_pos);
     init_list(data->random_portals, destroy_pos);
     for (int i = 0; i < SNAKE_MAP_WIDTH + 2; i ++) {
@@ -148,6 +149,12 @@ Pos get_random_pos(SnakeGameData* data) {
         ans.y = randint(SNAKE_MAP_HEIGHT) + 1;
     } while (data->game_map[ans.x][ans.y] != &empty_block);
     return ans;
+}
+
+void generate_additional_food(SnakeGameData* data) {
+    data->additional_food_pos = get_random_pos(data);
+    data->game_map[data->additional_food_pos.x][data->additional_food_pos.y] = &additional_food_block[0];
+    show_block(&additional_food_block[0], data->additional_food_pos.x, data->additional_food_pos.y);
 }
 
 void generate_eraser(SnakeGameData* data) {
@@ -208,9 +215,48 @@ void move_head_to(SnakeGameData* data, int x, int y) {
     show_block(data->game_map[hide_x][hide_y], hide_x, hide_y);
 }
 
+#define PROGRESSBAR_X (SNAKE_MAP_WIDTH + 1)
+#define PROGRESSBAR_Y (SNAKE_MAP_HEIGHT - 1)
+#define PROGRESSBAR_LEN 20
+
+void draw_sidebar_outline() {
+    set_color(WHITE, YELLOW);
+    move_cursor(SNAKE_MAP_WIDTH + 1, 1);
+    for (int i = 0; i < 20; i ++) {
+        putchar(' ');
+    }
+    move_cursor(SNAKE_MAP_WIDTH + 1, SNAKE_MAP_HEIGHT);
+    for (int i = 0; i < 20; i ++) {
+        putchar(' ');
+    }
+    for (int i = 1; i <= SNAKE_MAP_HEIGHT; i ++) {
+        move_cursor(SNAKE_MAP_WIDTH + 11, i);
+        printf("  ");
+    }
+}
+
+void update_score(SnakeGameData* data) {
+    move_cursor(SNAKE_MAP_WIDTH + 1, 3);
+    set_color(BLACK, WHITE);
+    printf("     Score: %3d     \n", data->score);
+}
+
 void start_snake_game(SnakeGameData* data) {
     clear_screen();
     hide_cursor();
+    draw_sidebar_outline();
+
+    move_cursor(PROGRESSBAR_X, PROGRESSBAR_Y - 3);
+    for (int i = 0; i < PROGRESSBAR_LEN; i ++) {
+        putchar(' ');
+    }
+
+    move_cursor(SNAKE_MAP_WIDTH + 1, 5);
+    for (int i = 0; i < PROGRESSBAR_LEN; i ++) {
+        putchar(' ');
+    }
+
+    update_score(data);
 
     Pos head_pos = get_random_pos(data);
     add_snake_body(data, head_pos.x, head_pos.y);
@@ -226,8 +272,10 @@ void start_snake_game(SnakeGameData* data) {
 
     int ch = "wasd"[randint(4)];
     int last_ch = ch;
+    double additional_food_last_shown = get_time() - data->additional_food_generate_time * 0.75;
+    double additional_food_last_sparkle = get_time();
     while (true) {
-        move_cursor(1, 21);
+        move_cursor(1, 22);
         set_color(WHITE, WHITE);
         ch = read_in_seconds(data->speed);
 #define OPPOSITE(a, b) (((a) == 'w' && (b) == 's') || ((a) == 'a' && (b) == 'd'))
@@ -242,6 +290,47 @@ void start_snake_game(SnakeGameData* data) {
         if (ch == 'q') {
             break;
         }
+        // -1 表示没有奖励食物
+        if (data->additional_food_pos.x != -1) {
+            // 更新进度条
+            move_cursor(PROGRESSBAR_X, PROGRESSBAR_Y);
+            set_color(WHITE, RED);
+            for (int i = 0; i < min(PROGRESSBAR_LEN * (get_time() - additional_food_last_shown) / data->additional_food_lasting_time, PROGRESSBAR_LEN); i ++) {
+                putchar(' ');
+            }
+            move_cursor(PROGRESSBAR_X, PROGRESSBAR_Y - 1);
+            set_color(BLACK, WHITE);
+            printf("   Time left: %2ds   \n", (int)(data->additional_food_lasting_time - get_time() + additional_food_last_shown));
+            // 闪烁
+            if (get_time() - additional_food_last_sparkle > 0.3) {
+                data->additional_food_state ++;
+                data->additional_food_state %= sizeof(additional_food_block) / sizeof(BlockType);
+                show_block(&additional_food_block[data->additional_food_state], data->additional_food_pos.x, data->additional_food_pos.y);
+                additional_food_last_sparkle = get_time();
+            }
+            // 持续一段时间后消失
+            if (get_time() - additional_food_last_shown > data->additional_food_lasting_time) {
+                data->game_map[data->additional_food_pos.x][data->additional_food_pos.y] = &empty_block;
+                show_block(&empty_block, data->additional_food_pos.x, data->additional_food_pos.y);
+                data->additional_food_pos.x = -1;
+                // 清空进度条
+                set_color(WHITE, WHITE);
+                for (int l = PROGRESSBAR_Y - 2; l <= PROGRESSBAR_Y; l ++) {
+                    move_cursor(PROGRESSBAR_X, l);
+                    for (int i = 0; i < PROGRESSBAR_LEN; i ++) {
+                        putchar(' ');
+                    }
+                }
+                putchar('\n');
+            }
+        } else if (get_time() - additional_food_last_shown > data->additional_food_generate_time) { // 每过一段时间生成
+            generate_additional_food(data);
+            move_cursor(PROGRESSBAR_X, PROGRESSBAR_Y - 2);
+            set_color(BLACK, WHITE);
+            printf("     Bonus Food     \n");
+            additional_food_last_shown = get_time();
+        }
+        putchar('\n');
         START_MOVE:;
         int backup_x = head_pos.x;
         int backup_y = head_pos.y;
@@ -279,12 +368,29 @@ void start_snake_game(SnakeGameData* data) {
                 move_head_to(data, head_pos.x, head_pos.y);
                 add_snake_body(data, last_tail_x, last_tail_y);
                 generate_food(data);
+                data->score += 1;
+                update_score(data);
             } else if (data->game_map[head_pos.x][head_pos.y] == &eraser_block) {
                 if (data->snake->size <= 1) {
                     break;
                 }
                 move_head_to(data, head_pos.x, head_pos.y);
                 pop_snake_body(data);
+            } else if (data->game_map[head_pos.x][head_pos.y] == &additional_food_block[0]) {
+                data->additional_food_pos.x = -1;
+                move_head_to(data, head_pos.x, head_pos.y);
+                add_snake_body(data, last_tail_x, last_tail_y);
+                // 清空进度条
+                set_color(WHITE, WHITE);
+                for (int l = PROGRESSBAR_Y - 2; l <= PROGRESSBAR_Y; l ++) {
+                    move_cursor(PROGRESSBAR_X, l);
+                    for (int i = 0; i < PROGRESSBAR_LEN; i ++) {
+                        putchar(' ');
+                    }
+                }
+                putchar('\n');
+                data->score += 5;
+                update_score(data);
             } else {
                 move_head_to(data, head_pos.x, head_pos.y);
             }
@@ -302,6 +408,7 @@ void display_selected(int x, int y) {
 void edit_snake_map(SnakeGameData* data) {
     clear_screen();
     hide_cursor();
+    draw_sidebar_outline();
 
     int pos_x = 1, pos_y = 1;
 

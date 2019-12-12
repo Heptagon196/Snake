@@ -29,9 +29,9 @@
 #define LIGHT_CYAN 96
 #define WHITE 97
 
-bool kbhit(); // check if any key is pressed
-int getch(); // get the key which the user has pressed
-#define Sleep(x) usleep((x) * 1000)
+bool kbhit(); // 检测是否有键按下
+int getch(); // 获取用户按下的键
+void Sleep(int s);
 
 #else
 
@@ -61,12 +61,13 @@ int getch(); // get the key which the user has pressed
 #define SCREEN_WIDTH 80
 #define SCREEN_HEIGHT 20
 
-void move_cursor(int x, int y);
+void move_cursor_origin(int x, int y); // 移动至 x, y
+void move_cursor(int x, int y); // 移动至 2 * x - 1, y
 void hide_cursor();
 void show_cursor();
-void set_color(int foreground_color, int background_color); // set the foreground and background color
-double get_time(); // get the time the program has run for
+void set_color(int foreground_color, int background_color);
+double get_time(); // 获取程序已运行时间
 void clear_screen();
-void clear_color(); // reset the output color
+void clear_color();
 
 #endif
