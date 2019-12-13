@@ -29,6 +29,9 @@ int main() {
 #else
     // Windows 下更改编码为 UTF-8 防止乱码
     SetConsoleOutputCP(65001);
+    // 更改终端长宽
+    system("mode con lines=20");
+    system("mode con cols=80");
 #endif
     load_config();
     int option;
@@ -44,7 +47,7 @@ int main() {
             start_snake_game(data);
             set_color(BLACK, WHITE);
             hide_cursor();
-            move_cursor(1, 21);
+            move_cursor_origin(70, 15);
             char* s = input_box(12, 2, "Game Over!", "Input your name:");
             if (s != NULL && strlen(s) != 0) {
                 rank_add_data(data->score_record, data->score, s);

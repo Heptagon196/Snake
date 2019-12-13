@@ -64,7 +64,7 @@ int Menu(int count, ...) {
             ans = -1;
             break;
         }
-        if (ch == '\n' || ch == '\r' || ch == ' ') {
+        if (ch == '\n' || ch == '\r') {
             break;
         }
         int previous_ans = ans;

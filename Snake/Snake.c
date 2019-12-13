@@ -155,29 +155,29 @@ void destroy_snake_game_data(SnakeGameData* data) {
     free(data);
 }
 
-Pos get_random_pos(SnakeGameData* data) {
+Pos get_random_pos(SnakeGameData* data, int edge) {
     Pos ans;
     do {
-        ans.x = randint(SNAKE_MAP_WIDTH) + 1;
-        ans.y = randint(SNAKE_MAP_HEIGHT) + 1;
+        ans.x = edge + randint(SNAKE_MAP_WIDTH - 2 * edge) + 1;
+        ans.y = edge + randint(SNAKE_MAP_HEIGHT - 2 * edge) + 1;
     } while (data->game_map[ans.x][ans.y] != &empty_block);
     return ans;
 }
 
 void generate_additional_food(SnakeGameData* data) {
-    data->additional_food_pos = get_random_pos(data);
+    data->additional_food_pos = get_random_pos(data, 0);
     data->game_map[data->additional_food_pos.x][data->additional_food_pos.y] = &additional_food_block[0];
     show_block(&additional_food_block[0], data->additional_food_pos.x, data->additional_food_pos.y);
 }
 
 void generate_eraser(SnakeGameData* data) {
-    Pos p = get_random_pos(data);
+    Pos p = get_random_pos(data, 0);
     data->game_map[p.x][p.y] = &eraser_block;
     show_block(&eraser_block, p.x, p.y);
 }
 
 void generate_food(SnakeGameData* data) {
-    Pos p = get_random_pos(data);
+    Pos p = get_random_pos(data, 0);
     data->game_map[p.x][p.y] = &food_block;
     show_block(&food_block, p.x, p.y);
     if (!randint(5)) {
@@ -228,28 +228,17 @@ void move_head_to(SnakeGameData* data, int x, int y) {
     show_block(data->game_map[hide_x][hide_y], hide_x, hide_y);
 }
 
-#define PROGRESSBAR_X (SNAKE_MAP_WIDTH + 1)
+#define PROGRESSBAR_X (SNAKE_MAP_WIDTH + 2)
 #define PROGRESSBAR_Y (SNAKE_MAP_HEIGHT - 1)
 #define PROGRESSBAR_LEN 20
 
 void draw_sidebar_outline() {
-    set_color(WHITE, YELLOW);
-    move_cursor(SNAKE_MAP_WIDTH + 1, 1);
-    for (int i = 0; i < 20; i ++) {
-        putchar(' ');
-    }
-    move_cursor(SNAKE_MAP_WIDTH + 1, SNAKE_MAP_HEIGHT);
-    for (int i = 0; i < 20; i ++) {
-        putchar(' ');
-    }
-    for (int i = 1; i <= SNAKE_MAP_HEIGHT; i ++) {
-        move_cursor(SNAKE_MAP_WIDTH + 11, i);
-        printf("  ");
-    }
+    set_color(BLACK, WHITE);
+    print_box(SNAKE_MAP_WIDTH * 2 + 2, 1, SNAKE_MAP_WIDTH * 2 + 23, SNAKE_MAP_HEIGHT);
 }
 
 void update_score(SnakeGameData* data) {
-    move_cursor(SNAKE_MAP_WIDTH + 1, 3);
+    move_cursor(SNAKE_MAP_WIDTH + 2, 3);
     set_color(BLACK, WHITE);
     printf("     Score: %3d     \n", data->score);
 }
@@ -261,30 +250,35 @@ void start_snake_game(SnakeGameData* data) {
     hide_cursor();
     draw_sidebar_outline();
 
-    move_cursor(PROGRESSBAR_X, PROGRESSBAR_Y - 3);
+    set_color(BLACK, WHITE);
+    move_cursor(PROGRESSBAR_X - 1, PROGRESSBAR_Y - 3);
+    printf(" ├");
     for (int i = 0; i < PROGRESSBAR_LEN; i ++) {
-        putchar(' ');
+        printf("─");
     }
+    printf("┤");
 
     move_cursor(SNAKE_MAP_WIDTH + 1, 5);
+    printf(" ├");
     for (int i = 0; i < PROGRESSBAR_LEN; i ++) {
-        putchar(' ');
+        printf("─");
     }
+    printf("┤");
 
-    move_cursor(SNAKE_MAP_WIDTH + 1, 7);
+    move_cursor(SNAKE_MAP_WIDTH + 2, 7);
     set_color(BLACK, WHITE);
     printf("        Rank        \n");
     ListNode* cur = data->score_record->scores->head;
     for (int l = 9; l <= PROGRESSBAR_Y - 5 && cur != NULL; l ++, cur = cur->next_node) {
-        move_cursor(SNAKE_MAP_WIDTH + 1, l);
+        move_cursor(SNAKE_MAP_WIDTH + 2, l);
         printf("  %s", ((RankData*)cur->value)->name);
-        move_cursor(SNAKE_MAP_WIDTH + 8, l);
+        move_cursor(SNAKE_MAP_WIDTH + 9, l);
         printf(" %3d  ", ((RankData*)cur->value)->score);
     }
 
     update_score(data);
 
-    Pos head_pos = get_random_pos(data);
+    Pos head_pos = get_random_pos(data, 4);
     add_snake_body(data, head_pos.x, head_pos.y);
 
     for (int i = 1; i <= SNAKE_MAP_WIDTH; i ++) {
@@ -301,7 +295,7 @@ void start_snake_game(SnakeGameData* data) {
     double additional_food_last_shown = get_time() - data->additional_food_generate_time * 0.75;
     double additional_food_last_sparkle = get_time();
     while (true) {
-        move_cursor(1, 22);
+        move_cursor(70, 15);
         set_color(WHITE, WHITE);
         ch = read_in_seconds(data->speed);
 #define OPPOSITE(a, b) (((a) == 'w' && (b) == 's') || ((a) == 'a' && (b) == 'd'))
@@ -312,6 +306,11 @@ void start_snake_game(SnakeGameData* data) {
         if (ch == 0) {
             ch = last_ch;
         }
+#define is_legal(ch) ((ch == 'q') || (ch == 'w') || (ch == 's') || (ch == 'a') || (ch == 'd'))
+        if (!is_legal(ch)) {
+            ch = last_ch;
+        }
+#undef is_legal
         last_ch = ch;
         if (ch == 'q') {
             break;
@@ -438,6 +437,17 @@ void edit_snake_map(SnakeGameData* data) {
     hide_cursor();
     draw_sidebar_outline();
 
+    set_color(BLACK, WHITE);
+    int first_line = 6;
+    move_cursor(SNAKE_MAP_WIDTH + 2, first_line);
+    printf("        Tips        \n");
+    move_cursor(SNAKE_MAP_WIDTH + 2, first_line + 2);
+    printf(" Press wsad to move \n");
+    move_cursor(SNAKE_MAP_WIDTH + 2, first_line + 4);
+    printf(" Press hjkl to copy \n");
+    move_cursor(SNAKE_MAP_WIDTH + 2, first_line + 6);
+    printf("Press 0123 to change\n");
+
     int pos_x = 1, pos_y = 1;
 
     for (int i = 1; i <= SNAKE_MAP_WIDTH; i ++) {
@@ -451,7 +461,7 @@ void edit_snake_map(SnakeGameData* data) {
 
     int ch;
     while (true) {
-        move_cursor(1, 21);
+        move_cursor(70, 15);
         set_color(WHITE, WHITE);
         ch = getch();
         if (ch == 'q') {

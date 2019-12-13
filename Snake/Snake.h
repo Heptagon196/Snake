@@ -11,7 +11,7 @@ typedef struct {
     int x, y;
 } Pos;
 
-#define SNAKE_MAP_WIDTH (SCREEN_WIDTH / 2 - 10)
+#define SNAKE_MAP_WIDTH (SCREEN_WIDTH / 2 - 11)
 #define SNAKE_MAP_HEIGHT (SCREEN_HEIGHT)
 
 typedef struct {
