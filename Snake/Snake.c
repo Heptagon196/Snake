@@ -59,7 +59,10 @@ void destroy_pos(void* val) {
 }
 
 void load_snake_map(SnakeGameData* data) {
-    FILE* fp = fopen(data->filename, "r");
+    FILE* fp = fopen(data->map_filename, "r");
+    if (fp == NULL) {
+        return ;
+    }
     while (!feof(fp)) {
         int operation;
         fscanf(fp, "%d", &operation);
@@ -89,7 +92,7 @@ void load_snake_map(SnakeGameData* data) {
 }
 
 void save_snake_map(SnakeGameData* data) {
-    FILE* fp = fopen(data->filename, "w");
+    FILE* fp = fopen(data->map_filename, "w");
     for (int i = 1; i <= SNAKE_MAP_WIDTH; i ++) {
         for (int j = 1; j <= SNAKE_MAP_HEIGHT; j ++) {
             if (data->game_map[i][j] == &wall_block) {
@@ -106,33 +109,33 @@ void save_snake_map(SnakeGameData* data) {
     fclose(fp);
 }
 
-void init_snake_game_data(SnakeGameData* data, const char* filename) {
-    data->snake = (List*)malloc(sizeof(List));
-    data->random_portals = (List*)malloc(sizeof(List));
+void init_snake_game_data(SnakeGameData* data, const char* map_filename, const char* rank_filename) {
     data->speed = 0.15;
-    data->filename = filename;
+    data->map_filename = map_filename;
+    data->rank_filename = rank_filename;
     data->additional_food_state = 0;
     data->additional_food_pos.x = -1;
     data->additional_food_lasting_time = 7;
     data->additional_food_generate_time = 20;
     data->score = 0;
+
+    data->snake = (List*)malloc(sizeof(List));
     init_list(data->snake, destroy_pos);
+
+    data->random_portals = (List*)malloc(sizeof(List));
     init_list(data->random_portals, destroy_pos);
+
+    data->score_record = (Rank*)malloc(sizeof(Rank));
+    init_rank(data->score_record);
+
     for (int i = 0; i < SNAKE_MAP_WIDTH + 2; i ++) {
         for (int j = 0; j < SNAKE_MAP_HEIGHT + 2; j ++) {
             data->game_map[i][j] = &empty_block;
         }
     }
     memset(data->transport_to, 0, sizeof(data->transport_to));
-}
 
-void destroy_snake_game_data(SnakeGameData* data) {
-    destroy_list(data->snake);
-    destroy_list(data->random_portals);
-    free(data);
-}
-
-void init_snake_game_map(SnakeGameData* data) {
+    // 读取地图
     for (int i = 1; i <= SNAKE_MAP_WIDTH; i ++) {
         data->game_map[i][1] = data->game_map[i][SNAKE_MAP_HEIGHT] = &wall_block;
     }
@@ -140,6 +143,16 @@ void init_snake_game_map(SnakeGameData* data) {
         data->game_map[1][i] = data->game_map[SNAKE_MAP_WIDTH][i] = &wall_block;
     }
     load_snake_map(data);
+
+    // 读取 rank
+    load_rank(data->score_record, data->rank_filename);
+}
+
+void destroy_snake_game_data(SnakeGameData* data) {
+    destroy_list(data->snake);
+    destroy_list(data->random_portals);
+    destroy_rank(data->score_record);
+    free(data);
 }
 
 Pos get_random_pos(SnakeGameData* data) {
@@ -242,6 +255,8 @@ void update_score(SnakeGameData* data) {
 }
 
 void start_snake_game(SnakeGameData* data) {
+    set_color(BLACK, WHITE);
+    puts("");
     clear_screen();
     hide_cursor();
     draw_sidebar_outline();
@@ -254,6 +269,17 @@ void start_snake_game(SnakeGameData* data) {
     move_cursor(SNAKE_MAP_WIDTH + 1, 5);
     for (int i = 0; i < PROGRESSBAR_LEN; i ++) {
         putchar(' ');
+    }
+
+    move_cursor(SNAKE_MAP_WIDTH + 1, 7);
+    set_color(BLACK, WHITE);
+    printf("        Rank        \n");
+    ListNode* cur = data->score_record->scores->head;
+    for (int l = 9; l <= PROGRESSBAR_Y - 5 && cur != NULL; l ++, cur = cur->next_node) {
+        move_cursor(SNAKE_MAP_WIDTH + 1, l);
+        printf("  %s", ((RankData*)cur->value)->name);
+        move_cursor(SNAKE_MAP_WIDTH + 8, l);
+        printf(" %3d  ", ((RankData*)cur->value)->score);
     }
 
     update_score(data);
@@ -300,7 +326,7 @@ void start_snake_game(SnakeGameData* data) {
             }
             move_cursor(PROGRESSBAR_X, PROGRESSBAR_Y - 1);
             set_color(BLACK, WHITE);
-            printf("   Time left: %2ds   \n", (int)(data->additional_food_lasting_time - get_time() + additional_food_last_shown));
+            printf("   Time Left: %2ds   \n", (int)(data->additional_food_lasting_time - get_time() + additional_food_last_shown));
             // 闪烁
             if (get_time() - additional_food_last_sparkle > 0.3) {
                 data->additional_food_state ++;
@@ -406,6 +432,8 @@ void display_selected(int x, int y) {
 }
 
 void edit_snake_map(SnakeGameData* data) {
+    set_color(BLACK, WHITE);
+    puts("");
     clear_screen();
     hide_cursor();
     draw_sidebar_outline();

@@ -26,8 +26,5 @@ void list_insert(List* lst, void* val, int pos); // 插入后元素处于 pos �
 #define list_append(lst, val) list_insert((lst), (val), (lst)->size) // 插入末尾
 void list_delete(List* lst, int pos);
 void destroy_list(List* lst);
-// 用于循环访问链表的宏
-#define list_foreach(lst) for (ListNode* temp_list_iter = lst->head; temp_list_iter!= NULL; temp_list_iter = temp_list_iter->next_node)
-#define list_iter(type) ((type*)(temp_list_iter->value))
 
 #endif

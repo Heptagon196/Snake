@@ -121,3 +121,39 @@ double get_time() {
     return (double) clock() / CLOCKS_PER_SEC + extra_time;
 }
 
+void print_to_middle(const char* content, int line) {
+    int left_spaces_count = (SCREEN_WIDTH - strlen(content)) / 2;
+    int right_spaces_count = SCREEN_WIDTH - left_spaces_count - strlen(content);
+    left_spaces_count -= 2;
+    right_spaces_count -= 2;
+    move_cursor(2, line + 2);
+    for (int i = 0; i < left_spaces_count; i ++) {
+        putchar(' ');
+    }
+    printf("%s", content);
+    for (int i = 0; i < right_spaces_count; i ++) {
+        putchar(' ');
+    }
+    putchar('\n');
+}
+
+void print_box(int top_left_x, int top_left_y, int bottom_right_x, int bottom_right_y) {
+    move_cursor_origin(top_left_x, top_left_y);
+    printf("┌");
+    for (int i = top_left_x + 1; i <= bottom_right_x - 1; i ++) {
+        printf("─");
+    }
+    printf("┐");
+    move_cursor_origin(top_left_x, bottom_right_y);
+    printf("└");
+    for (int i = top_left_x + 1; i <= bottom_right_x - 1; i ++) {
+        printf("─");
+    }
+    printf("┘");
+    for (int i = top_left_y + 1; i <= bottom_right_y - 1; i ++) {
+        move_cursor_origin(top_left_x, i);
+        printf("│");
+        move_cursor_origin(bottom_right_x, i);
+        printf("│");
+    }
+}

@@ -17,17 +17,20 @@ int main() {
             return 0;
         }
         SnakeGameData* data = (SnakeGameData*)malloc(sizeof(SnakeGameData));
-        init_snake_game_data(data, "snake.map");
-        init_snake_game_map(data);
+        init_snake_game_data(data, "data/snake_map.txt", "data/rank.txt");
         if (option == 0) {
             start_snake_game(data);
-            destroy_snake_game_data(data);
             set_color(BLACK, WHITE);
             hide_cursor();
             move_cursor(1, 21);
-            puts("Game Over! Press any key to exit.");
-            getch();
+            puts("Game Over! Press 'S' to save your score, or press another key to exit.");
+            int ch = getch();
+            if (ch == 's' || ch == 'S') {
+                rank_add_data(data->score_record, data->score, input_box("Input your name:", 12));
+                save_rank(data->score_record, data->rank_filename);
+            }
             show_cursor();
+            destroy_snake_game_data(data);
         }
         if (option == 1) {
             edit_snake_map(data);

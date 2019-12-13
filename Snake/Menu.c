@@ -15,50 +15,17 @@ void destroy_option(void* val) {
 }
 
 void print_outline() {
-    set_color(WHITE, GREEN);
-    move_cursor(1, 1);
-    printf("╔");
-    for (int i = 2; i <= SCREEN_WIDTH - 1; i ++) {
-        printf("═");
-    }
-    printf("╗");
-    move_cursor(1, SCREEN_HEIGHT);
-    printf("╚");
-    for (int i = 2; i <= SCREEN_WIDTH - 1; i ++) {
-        printf("═");
-    }
-    printf("╝");
-    for (int i = 2; i <= SCREEN_HEIGHT - 1; i ++) {
-        move_cursor(1, i);
-        printf("║ ");
-        move_cursor(SCREEN_WIDTH / 2, i);
-        printf(" ║");
-    }
-}
-
-void print_to_middle(const char* content, int line) {
-    int left_spaces_count = (SCREEN_WIDTH - strlen(content)) / 2;
-    int right_spaces_count = SCREEN_WIDTH - left_spaces_count - strlen(content);
-    left_spaces_count -= 2;
-    right_spaces_count -= 2;
-    move_cursor(2, line + 2);
-    for (int i = 0; i < left_spaces_count; i ++) {
-        putchar(' ');
-    }
-    printf("%s", content);
-    for (int i = 0; i < right_spaces_count; i ++) {
-        putchar(' ');
-    }
-    putchar('\n');
+    set_color(BLACK, WHITE);
+    print_box(1, 1, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
 void print_chosen(Option* option, int line) {
-    set_color(BLACK, WHITE);
+    set_color(WHITE, YELLOW);
     print_to_middle(option->content, line);
 }
 
 void print_normal(Option* option, int line) {
-    set_color(WHITE, BLACK);
+    set_color(BLACK, WHITE);
     print_to_middle(option->content, line);
 }
 
@@ -77,14 +44,16 @@ int Menu(int count, ...) {
     va_end(params);
     
     int ans = 0;
+    set_color(BLACK, WHITE);
+    puts("");
     clear_screen();
     hide_cursor();
     print_outline();
-    set_color(BLUE, BLACK);
+    set_color(BLUE, WHITE);
     print_to_middle(title, 0);
     int option_cnt = 1;
-    list_foreach(options) {
-        print_normal(list_iter(Option), option_cnt);
+    for (ListNode* i = options->head; i != NULL; i = i->next_node) {
+        print_normal((Option*)i->value, option_cnt);
         option_cnt ++;
     }
     print_chosen((Option*)get_list_val(options, 0), 1);

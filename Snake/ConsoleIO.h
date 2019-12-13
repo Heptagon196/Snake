@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdbool.h>
 
 #if defined(linux) || defined(__APPLE__)
@@ -66,8 +67,10 @@ void move_cursor(int x, int y); // 移动至 2 * x - 1, y
 void hide_cursor();
 void show_cursor();
 void set_color(int foreground_color, int background_color);
-double get_time(); // 获取程序已运行时间
 void clear_screen();
 void clear_color();
+double get_time(); // 获取程序已运行时间
+void print_to_middle(const char* content, int line);
+void print_box(int top_left_x, int top_left_y, int bottom_right_x, int bottom_right_y);
 
 #endif
