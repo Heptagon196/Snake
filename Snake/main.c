@@ -30,8 +30,8 @@ int main() {
     // Windows 下更改编码为 UTF-8 防止乱码
     SetConsoleOutputCP(65001);
     // 更改终端长宽
-    system("mode con lines=20");
-    system("mode con cols=80");
+    system("mode con lines=21");
+    system("mode con cols=82");
 #endif
     load_config();
     int option;
