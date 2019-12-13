@@ -28,3 +28,6 @@ snake
 *.exe
 *.out
 *.app
+
+# Others
+rank.txt

@@ -1,0 +1,2 @@
+map_file=data/snake_map.txt
+rank_file=data/rank.txt

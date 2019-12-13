@@ -121,12 +121,12 @@ double get_time() {
     return (double) clock() / CLOCKS_PER_SEC + extra_time;
 }
 
-void print_to_middle(const char* content, int line) {
+void print_to_middle(const char* content, int line, int dis_to_edge) {
     int left_spaces_count = (SCREEN_WIDTH - strlen(content)) / 2;
     int right_spaces_count = SCREEN_WIDTH - left_spaces_count - strlen(content);
-    left_spaces_count -= 2;
-    right_spaces_count -= 2;
-    move_cursor(2, line + 2);
+    left_spaces_count -= dis_to_edge;
+    right_spaces_count -= dis_to_edge;
+    move_cursor_origin(1 + dis_to_edge, line);
     for (int i = 0; i < left_spaces_count; i ++) {
         putchar(' ');
     }

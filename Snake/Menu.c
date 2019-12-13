@@ -21,12 +21,12 @@ void print_outline() {
 
 void print_chosen(Option* option, int line) {
     set_color(WHITE, YELLOW);
-    print_to_middle(option->content, line);
+    print_to_middle(option->content, line + 2, 2);
 }
 
 void print_normal(Option* option, int line) {
     set_color(BLACK, WHITE);
-    print_to_middle(option->content, line);
+    print_to_middle(option->content, line + 2, 2);
 }
 
 int Menu(int count, ...) {
@@ -50,7 +50,7 @@ int Menu(int count, ...) {
     hide_cursor();
     print_outline();
     set_color(BLUE, WHITE);
-    print_to_middle(title, 0);
+    print_to_middle(title, 2, 2);
     int option_cnt = 1;
     for (ListNode* i = options->head; i != NULL; i = i->next_node) {
         print_normal((Option*)i->value, option_cnt);
@@ -60,7 +60,7 @@ int Menu(int count, ...) {
     int ch = 0;
     while (true) {
         ch = getch();
-        if (ch == 'q') {
+        if (ch == 'q' || ch == 27) {
             ans = -1;
             break;
         }

@@ -70,7 +70,7 @@ void set_color(int foreground_color, int background_color);
 void clear_screen();
 void clear_color();
 double get_time(); // 获取程序已运行时间
-void print_to_middle(const char* content, int line);
+void print_to_middle(const char* content, int line, int dis_to_edge);
 void print_box(int top_left_x, int top_left_y, int bottom_right_x, int bottom_right_y);
 
 #endif

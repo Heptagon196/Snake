@@ -49,6 +49,9 @@ void save_rank(Rank* rk, const char* filename) {
 
 void load_rank(Rank* rk, const char* filename) {
     FILE* fp = fopen(filename, "r");
+    if (fp == NULL) {
+        return ;
+    }
     while (!feof(fp)) {
         char s[256];
         if (fgets(s, 255, fp) == NULL) {
