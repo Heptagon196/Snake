@@ -1,5 +1,5 @@
 map_file=data/snake_map.txt
 rank_file=data/rank.txt
-snake_speed=0.1
+snake_speed=0.15
 additional_food_lasting_time=7
 additional_food_generate_time=20
