@@ -4,9 +4,13 @@
 
 const BlockType empty_block = {WHITE, WHITE, "  "};
 const BlockType wall_block = {WHITE, YELLOW, "  "};
+const BlockType snake_head_block = {WHITE, BLUE, "  "};
+const BlockType snake_body_block = {WHITE, GREEN, "  "};
 
 // random_portal_block 随机传送
 // portal_block 定向传送
+
+// linux 下以下特殊字符虽然显示出了两个字符的长度，但只占据了一个字符的位置，需要补上一个空格
 #if defined(linux) || defined(__APPLE__)
 const BlockType random_portal_block = {MAGENTA, WHITE, "◆ "};
 const BlockType portal_block = {CYAN, WHITE, "◆ "};
@@ -21,9 +25,6 @@ const BlockType eraser_block = {LIGHT_BLUE, WHITE, "▲"};
 const BlockType additional_food_block[3] = {{LIGHT_RED, WHITE, "★"}, {LIGHT_BLUE, WHITE, "★"}, {LIGHT_GREEN, WHITE, "★"}};
 #endif
 
-const BlockType snake_head_block = {WHITE, BLUE, "  "};
-const BlockType snake_body_block = {WHITE, GREEN, "  "};
-
 int randint(int m) {
     return rand() % m;
 }
@@ -36,7 +37,8 @@ int read_in_seconds(double lasting_time) {
         last_ch = getch();
     }
     while (!kbhit() && (get_time() - last_time_point < lasting_time)) {
-        Sleep(20);
+        // 如果不暂停一段时间而直接死循环，会因为执行频率过高把 cpu 跑到 100%
+        Sleep(20); // 暂停 20 毫秒
     }
     if (!kbhit()) {
         return last_ch;
@@ -109,7 +111,7 @@ void save_snake_map(SnakeGameData* data) {
     fclose(fp);
 }
 
-void init_snake_game_data(SnakeGameData* data, const char* map_filename, const char* rank_filename, double snake_speed, int additional_food_lasting_time, int additional_food_generate_time) {
+void init_snake_game_data(SnakeGameData* data, const char* map_filename, const char* rank_filename, double snake_speed, int additional_food_lasting_time, int additional_food_generate_time, double eraser_possibility) {
     data->map_filename = map_filename;
     data->rank_filename = rank_filename;
     data->additional_food_state = 0;
@@ -118,6 +120,8 @@ void init_snake_game_data(SnakeGameData* data, const char* map_filename, const c
     data->speed = snake_speed;
     data->additional_food_lasting_time = additional_food_lasting_time;
     data->additional_food_generate_time = additional_food_generate_time;
+    data->eraser_possibility = eraser_possibility;
+
     data->score = 0;
 
     data->snake = (List*)malloc(sizeof(List));
@@ -156,6 +160,7 @@ void destroy_snake_game_data(SnakeGameData* data) {
     free(data);
 }
 
+// 获取与边框间距为 edge 的范围内的随机位置
 Pos get_random_pos(SnakeGameData* data, int edge) {
     Pos ans;
     do {
@@ -181,7 +186,8 @@ void generate_food(SnakeGameData* data) {
     Pos p = get_random_pos(data, 0);
     data->game_map[p.x][p.y] = &food_block;
     show_block(&food_block, p.x, p.y);
-    if (!randint(5)) {
+    // 生成食物时以 eraser_possibility 的概率生成 eraser
+    if ((double) rand() / RAND_MAX < data->eraser_possibility) {
         generate_eraser(data);
     }
 }
@@ -202,9 +208,10 @@ void pop_snake_body(SnakeGameData* data) {
     data->game_map[SNAKEBODY_TAIL->x][SNAKEBODY_TAIL->y] = &empty_block;
     show_block(&empty_block, SNAKEBODY_TAIL->x, SNAKEBODY_TAIL->y);
     set_color(BLACK, WHITE);
-    list_delete(data->snake, data->snake->size - 1);
+    list_pop(data->snake);
 }
 
+// 将尾部节点改为头部节点并移动至 x, y 位置
 void move_head_to(SnakeGameData* data, int x, int y) {
     Pos* tail = SNAKEBODY_TAIL;
     int hide_x = tail->x;
@@ -229,6 +236,7 @@ void move_head_to(SnakeGameData* data, int x, int y) {
     show_block(data->game_map[hide_x][hide_y], hide_x, hide_y);
 }
 
+// 额外食物进度条设置
 #define PROGRESSBAR_X (SNAKE_MAP_WIDTH + 2)
 #define PROGRESSBAR_Y (SNAKE_MAP_HEIGHT - 1)
 #define PROGRESSBAR_LEN 20
@@ -249,8 +257,9 @@ void start_snake_game(SnakeGameData* data) {
     puts("");
     clear_screen();
     hide_cursor();
-    draw_sidebar_outline();
 
+    // 输出侧边栏边框
+    draw_sidebar_outline();
     set_color(BLACK, WHITE);
     move_cursor(PROGRESSBAR_X - 1, PROGRESSBAR_Y - 3);
     printf(" ├");
@@ -258,7 +267,6 @@ void start_snake_game(SnakeGameData* data) {
         printf("─");
     }
     printf("┤");
-
     move_cursor(SNAKE_MAP_WIDTH + 1, 5);
     printf(" ├");
     for (int i = 0; i < PROGRESSBAR_LEN; i ++) {
@@ -266,6 +274,7 @@ void start_snake_game(SnakeGameData* data) {
     }
     printf("┤");
 
+    // 输出排行榜
     move_cursor(SNAKE_MAP_WIDTH + 2, 7);
     set_color(BLACK, WHITE);
     printf("        Rank        \n");
@@ -291,14 +300,19 @@ void start_snake_game(SnakeGameData* data) {
     show_block(&snake_head_block, SNAKEBODY_HEAD->x, SNAKEBODY_HEAD->y);
     generate_food(data);
 
+    // 起始时随机方向
     int ch = "wasd"[randint(4)];
     int last_ch = ch;
+    // 1 / 4 倍 additional_food_generate_time 后第一次生成额外食物
     double additional_food_last_shown = get_time() - data->additional_food_generate_time * 0.75;
+    // 用于控制闪烁
     double additional_food_last_sparkle = get_time();
     while (true) {
-        move_cursor(70, 15);
+        // 移动到一个空白位置并将前景色后景色均设为白色，避免用户多余的按键显示在界面上
+        move_cursor_origin(70, 15);
         set_color(WHITE, WHITE);
         ch = read_in_seconds(data->speed);
+        // 禁止改变后方向与原方向相反
 #define OPPOSITE(a, b) (((a) == 'w' && (b) == 's') || ((a) == 'a' && (b) == 'd'))
         if (OPPOSITE(ch, last_ch) || OPPOSITE(last_ch, ch)) {
             ch = last_ch;
@@ -307,6 +321,7 @@ void start_snake_game(SnakeGameData* data) {
         if (ch == 0) {
             ch = last_ch;
         }
+        // 输入无效时忽略
 #define is_legal(ch) ((ch == 'q') || (ch == 'w') || (ch == 's') || (ch == 'a') || (ch == 'd'))
         if (!is_legal(ch)) {
             ch = last_ch;
@@ -462,7 +477,7 @@ void edit_snake_map(SnakeGameData* data) {
 
     int ch;
     while (true) {
-        move_cursor(70, 15);
+        move_cursor_origin(70, 15);
         set_color(WHITE, WHITE);
         ch = getch();
         if (ch == 'q') {
@@ -494,25 +509,25 @@ void edit_snake_map(SnakeGameData* data) {
         if (pos_y == SNAKE_MAP_HEIGHT + 1) {
             pos_y = 1;
         }
-        if (ch == 'h') {
+        if (ch == 'h' && data->game_map[pos_x][pos_y] != &portal_block) {
             for (int i = 2; i <= pos_x - 1; i ++) {
                 data->game_map[i][pos_y] = data->game_map[pos_x][pos_y];
                 show_block(data->game_map[i][pos_y], i, pos_y);
             }
         }
-        if (ch == 'l') {
+        if (ch == 'l' && data->game_map[pos_x][pos_y] != &portal_block) {
             for (int i = pos_x + 1; i <= SNAKE_MAP_WIDTH - 1; i ++) {
                 data->game_map[i][pos_y] = data->game_map[pos_x][pos_y];
                 show_block(data->game_map[i][pos_y], i, pos_y);
             }
         }
-        if (ch == 'k') {
+        if (ch == 'k' && data->game_map[pos_x][pos_y] != &portal_block) {
             for (int i = 2; i <= pos_y - 1; i ++) {
                 data->game_map[pos_x][i] = data->game_map[pos_x][pos_y];
                 show_block(data->game_map[pos_x][i], pos_x, i);
             }
         }
-        if (ch == 'j') {
+        if (ch == 'j' && data->game_map[pos_x][pos_y] != &portal_block) {
             for (int i = pos_y + 1; i <= SNAKE_MAP_HEIGHT - 1; i ++) {
                 data->game_map[pos_x][i] = data->game_map[pos_x][pos_y];
                 show_block(data->game_map[pos_x][i], pos_x, i);
@@ -528,6 +543,7 @@ void edit_snake_map(SnakeGameData* data) {
             data->game_map[pos_x][pos_y] = &random_portal_block;
         } else if (ch == '3') {
             data->game_map[pos_x][pos_y] = &portal_block;
+            // 将每两次修改的定向传送门连接
             if (portal.x == -1 && portal.y == -1) {
                 portal.x = pos_x;
                 portal.y = pos_y;

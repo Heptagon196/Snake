@@ -25,6 +25,7 @@ typedef struct {
     Pos additional_food_pos; // 额外食物位置
     int additional_food_lasting_time; // 额外食物持续时间
     int additional_food_generate_time; // 额外食物生成间隔时间
+    double eraser_possibility; // eraser 伴随食物生成的概率
     int score; // 得分
     Rank* score_record; // 排行榜
     const char* rank_filename; // 排行榜文件名
@@ -33,7 +34,7 @@ typedef struct {
 void load_snake_map(SnakeGameData* data);
 void save_snake_map(SnakeGameData* data);
 
-void init_snake_game_data(SnakeGameData* data, const char* map_filename, const char* rank_filename, double snake_speed, int additional_food_lasting_time, int additional_food_generate_time);
+void init_snake_game_data(SnakeGameData* data, const char* map_filename, const char* rank_filename, double snake_speed, int additional_food_lasting_time, int additional_food_generate_time, double eraser_possibility);
 void destroy_snake_game_data(SnakeGameData* data);
 
 void start_snake_game(SnakeGameData* data);

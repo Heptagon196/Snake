@@ -1,5 +1,4 @@
 #include "List.h"
-#include <stdio.h>
 
 void init_list(List* lst, destroy_func* func) {
     lst->size = 0;
@@ -14,6 +13,7 @@ ListNode* list_get(List* lst, int pos) {
         return NULL;
     }
     ListNode* cur;
+    // 判断 pos 更靠近开头还是结尾，并选择从头部还是尾部考试遍历，提高效率
     if (pos < lst->size / 2) {
         cur = lst->head;
         for (int i = 0; i < pos; i ++) {
@@ -29,25 +29,18 @@ ListNode* list_get(List* lst, int pos) {
 }
 
 void list_insert(List* lst, void* val, int pos) {
-    if (lst->size == 0) {
-        if (pos != 0) {
-            fprintf(stderr, "Unable to insert a value to pos %d in an empty list.\n", pos);
-            return;
-        }
-        lst->head = (ListNode*)malloc(sizeof(ListNode));
-        lst->tail = lst->head;
-        lst->head->next_node = NULL;
-        lst->head->prev_node = NULL;
-        lst->head->value = val;
-        lst->size ++;
-        return ;
-    }
     ListNode* new_node = (ListNode*)malloc(sizeof(ListNode));
     new_node->value = val;
+    // pos 为 0 时找不到 pos - 1 位置，单独处理
     if (pos == 0) {
         new_node->next_node = lst->head;
         new_node->prev_node = NULL;
-        lst->head->prev_node = new_node;
+        if (lst->size == 0) {
+            lst->tail = new_node;
+        }
+        if (lst->head != NULL) {
+            lst->head->prev_node = new_node;
+        }
         lst->head = new_node;
         lst->size ++;
         return ;

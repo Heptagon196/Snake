@@ -63,14 +63,14 @@ void Sleep(int s);
 #define SCREEN_HEIGHT 20
 
 void move_cursor_origin(int x, int y); // 移动至 x, y
-void move_cursor(int x, int y); // 移动至 2 * x - 1, y
+void move_cursor(int x, int y); // 移动至 2 * x - 1, y。终端中字符高是宽的 2 倍，故用两个字符为一个单位。
 void hide_cursor();
 void show_cursor();
 void set_color(int foreground_color, int background_color);
 void clear_screen();
 void clear_color();
 double get_time(); // 获取程序已运行时间
-void print_to_middle(const char* content, int line, int dis_to_edge);
-void print_box(int top_left_x, int top_left_y, int bottom_right_x, int bottom_right_y);
+void print_to_middle(const char* content, int line, int dis_to_edge); // 将 content 居中输出到 line 行，dis_to_edge 表示两侧不输出空格的字符数
+void print_box(int top_left_x, int top_left_y, int bottom_right_x, int bottom_right_y); // 输出边框
 
 #endif

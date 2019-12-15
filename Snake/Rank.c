@@ -24,10 +24,12 @@ void rank_add_data(Rank* rk, int score, char* name) {
 
 #define score(a) ((RankData*)a->value)->score
 #define name(a) ((RankData*)a->value)->name
+// 选择排序
 void rank_sort(Rank* rk) {
     for (ListNode* a = rk->scores->head; a != NULL; a = a->next_node) {
         for (ListNode* b = a->next_node; b != NULL; b = b->next_node) {
             if (score(a) < score(b)) {
+                // 交换
                 int tmp_score = score(b);
                 char* tmp_name = name(b);
                 score(b) = score(a);
@@ -57,7 +59,7 @@ void load_rank(Rank* rk, const char* filename) {
         if (fgets(s, 255, fp) == NULL) {
             break;
         }
-        s[strlen(s) - 1] = '\0';
+        s[strlen(s) - 1] = '\0'; // 舍去末尾换行
         char* new_string = (char*)calloc(strlen(s) + 1, sizeof(char));
         strcpy(new_string, s);
         int score;

@@ -6,6 +6,7 @@ char map_filename[256], rank_filename[256];
 double snake_speed = 0.15;
 int additional_food_lasting_time = 7;
 int additional_food_generate_time = 20;
+double eraser_possibility = 0.25;
 
 // 读取配置文件
 void load_config() {
@@ -34,6 +35,10 @@ void load_config() {
             int t;
             sscanf(content, "%d", &t);
             additional_food_generate_time = t;
+        } else if (!strcmp(op, "eraser_possibility")) {
+            double p;
+            sscanf(content, "%lf", &p);
+            eraser_possibility = p;
         }
     }
     fclose(fp);
@@ -58,16 +63,20 @@ int main() {
             return 0;
         }
         SnakeGameData* data = (SnakeGameData*)malloc(sizeof(SnakeGameData));
-        init_snake_game_data(data, map_filename, rank_filename, snake_speed, additional_food_lasting_time, additional_food_generate_time);
+        init_snake_game_data(data, map_filename, rank_filename, snake_speed, additional_food_lasting_time, additional_food_generate_time, eraser_possibility);
         if (option == 0) {
             start_snake_game(data);
             set_color(BLACK, WHITE);
             hide_cursor();
-            move_cursor_origin(70, 15);
+            // 弹出输入框，未使用 esc 退出且输入非空时保存成绩
             char* s = input_box(12, 2, "Game Over!", "Input your name:");
-            if (s != NULL && strlen(s) != 0) {
-                rank_add_data(data->score_record, data->score, s);
-                save_rank(data->score_record, data->rank_filename);
+            if (s != NULL) {
+                if (strlen(s) != 0) {
+                    rank_add_data(data->score_record, data->score, s);
+                    save_rank(data->score_record, data->rank_filename);
+                } else {
+                    free(s);
+                }
             }
             show_cursor();
             destroy_snake_game_data(data);

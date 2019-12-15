@@ -21,12 +21,12 @@ void print_outline() {
 
 void print_chosen(Option* option, int line) {
     set_color(WHITE, YELLOW);
-    print_to_middle(option->content, line + 2, 2);
+    print_to_middle(option->content, line + 2, 1);
 }
 
 void print_normal(Option* option, int line) {
     set_color(BLACK, WHITE);
-    print_to_middle(option->content, line + 2, 2);
+    print_to_middle(option->content, line + 2, 1);
 }
 
 int Menu(int count, ...) {

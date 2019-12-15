@@ -1,6 +1,7 @@
 #ifndef LIST_H
 #define LIST_H
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -20,11 +21,12 @@ typedef struct {
 } List;
 
 void init_list(List* lst, destroy_func func);
-ListNode* list_get(List* lst, int pos);
+ListNode* list_get(List* lst, int pos); // 获取第 pos 个位置的 ListNode
 #define get_list_val(lst, pos) list_get(lst, pos)->value
 void list_insert(List* lst, void* val, int pos); // 插入后元素处于 pos 位置
 #define list_append(lst, val) list_insert((lst), (val), (lst)->size) // 插入末尾
-void list_delete(List* lst, int pos);
-void destroy_list(List* lst);
+void list_delete(List* lst, int pos); // 删除第 pos 个元素
+#define list_pop(lst) list_delete((lst), (lst)->size - 1) // 删除末尾元素
+void destroy_list(List* lst); // 删除链表
 
 #endif
