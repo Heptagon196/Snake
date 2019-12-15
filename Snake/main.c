@@ -3,7 +3,11 @@
 #include "Snake.h"
 
 char map_filename[256], rank_filename[256];
+double snake_speed = 0.15;
+int additional_food_lasting_time = 7;
+int additional_food_generate_time = 20;
 
+// 读取配置文件
 void load_config() {
     FILE* fp = fopen("data/config.txt", "r");
     if (fp == NULL) {
@@ -11,13 +15,25 @@ void load_config() {
         exit(EXIT_FAILURE);
     }
     while (!feof(fp)) {
-        char op[256], filename[256];
-        // 读入可能含空格的字符串并舍去回车
-        fscanf(fp, "%[^=]=%[^\n]%*c", op, filename);
+        char op[256], content[256];
+        // 读入两个以 = 分隔的字符串并舍去末尾换行符
+        fscanf(fp, "%[^=]=%[^\n]%*c", op, content);
         if (!strcmp(op, "map_file")) {
-            strcpy(map_filename, filename);
+            strcpy(map_filename, content);
         } else if (!strcmp(op, "rank_file")) {
-            strcpy(rank_filename, filename);
+            strcpy(rank_filename, content);
+        } else if (!strcmp(op, "snake_speed")) {
+            double d;
+            sscanf(content, "%lf", &d);
+            snake_speed = d;
+        } else if (!strcmp(op, "additional_food_lasting_time")) {
+            int t;
+            sscanf(content, "%d", &t);
+            additional_food_lasting_time = t;
+        } else if (!strcmp(op, "additional_food_generate_time")) {
+            int t;
+            sscanf(content, "%d", &t);
+            additional_food_generate_time = t;
         }
     }
     fclose(fp);
@@ -42,7 +58,7 @@ int main() {
             return 0;
         }
         SnakeGameData* data = (SnakeGameData*)malloc(sizeof(SnakeGameData));
-        init_snake_game_data(data, map_filename, rank_filename);
+        init_snake_game_data(data, map_filename, rank_filename, snake_speed, additional_food_lasting_time, additional_food_generate_time);
         if (option == 0) {
             start_snake_game(data);
             set_color(BLACK, WHITE);

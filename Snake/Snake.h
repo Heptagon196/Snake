@@ -33,7 +33,7 @@ typedef struct {
 void load_snake_map(SnakeGameData* data);
 void save_snake_map(SnakeGameData* data);
 
-void init_snake_game_data(SnakeGameData* data, const char* map_filename, const char* rank_filename);
+void init_snake_game_data(SnakeGameData* data, const char* map_filename, const char* rank_filename, double snake_speed, int additional_food_lasting_time, int additional_food_generate_time);
 void destroy_snake_game_data(SnakeGameData* data);
 
 void start_snake_game(SnakeGameData* data);

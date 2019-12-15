@@ -109,14 +109,15 @@ void save_snake_map(SnakeGameData* data) {
     fclose(fp);
 }
 
-void init_snake_game_data(SnakeGameData* data, const char* map_filename, const char* rank_filename) {
-    data->speed = 0.15;
+void init_snake_game_data(SnakeGameData* data, const char* map_filename, const char* rank_filename, double snake_speed, int additional_food_lasting_time, int additional_food_generate_time) {
     data->map_filename = map_filename;
     data->rank_filename = rank_filename;
     data->additional_food_state = 0;
     data->additional_food_pos.x = -1;
-    data->additional_food_lasting_time = 7;
-    data->additional_food_generate_time = 20;
+
+    data->speed = snake_speed;
+    data->additional_food_lasting_time = additional_food_lasting_time;
+    data->additional_food_generate_time = additional_food_generate_time;
     data->score = 0;
 
     data->snake = (List*)malloc(sizeof(List));
