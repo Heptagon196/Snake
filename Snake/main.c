@@ -50,9 +50,14 @@ int main() {
 #else
     // Windows 下更改编码为 UTF-8 防止乱码
     SetConsoleOutputCP(65001);
-    // 更改终端长宽
-    system("mode con lines=21");
-    system("mode con cols=82");
+    // 更改终端窗口及缓冲区大小
+    int width = 81;
+    int height = 21;
+    HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+	SMALL_RECT rect = {1, 1, width, height};
+	SetConsoleWindowInfo(handle, true, &rect);
+	COORD size = {width, height};
+	SetConsoleScreenBufferSize(handle, size);
 #endif
     load_config();
     int option;

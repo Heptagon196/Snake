@@ -292,15 +292,14 @@ void start_snake_game(SnakeGameData* data) {
 
     update_score(data);
 
-    Pos head_pos = get_random_pos(data, 4);
-    add_snake_body(data, head_pos.x, head_pos.y);
-
     for (int i = 1; i <= SNAKE_MAP_WIDTH; i ++) {
         for (int j = 1; j <= SNAKE_MAP_HEIGHT; j ++) {
             show_block(data->game_map[i][j], i, j);
         }
     }
 
+    Pos head_pos = get_random_pos(data, 4);
+    add_snake_body(data, head_pos.x, head_pos.y);
     show_block(&snake_head_block, SNAKEBODY_HEAD->x, SNAKEBODY_HEAD->y);
     generate_food(data);
 
@@ -449,6 +448,54 @@ void display_selected(int x, int y) {
     puts("  ");
 }
 
+// 删除传送门
+void remove_portal(SnakeGameData* data, int x, int y) {
+    Pos p = data->transport_to[x][y];
+    data->transport_to[x][y] = (Pos){0, 0};
+    data->transport_to[p.x][p.y] = (Pos){0, 0};
+    data->game_map[p.x][p.y] = &empty_block;
+    show_block(&empty_block, p.x, p.y);
+    show_block(&empty_block, x, y);
+}
+
+// 批量赋值，指定左上角与右下角坐标
+void assign_map_block(SnakeGameData* data, int top_left_x, int top_left_y, int bottom_right_x, int bottom_right_y, const BlockType* type) {
+    for (int i = top_left_x; i <= bottom_right_x; i ++) {
+        for (int j = top_left_y; j <= bottom_right_y; j ++) {
+            if (data->game_map[i][j] == &portal_block) {
+                remove_portal(data, i, j);
+            }
+            data->game_map[i][j] = type;
+            show_block(type, i, j);
+        }
+    }
+}
+
+// 批量同步赋值定向传送门，指定两个传送门位置的坐标以及最大位移
+void assign_map_portal_block(SnakeGameData* data, int x1, int y1, int x2, int y2, int dx, int dy) {
+    dx += (dx > 0) ? 1 : -1;
+    dy += (dy > 0) ? 1 : -1;
+    for (int i = x1; i != x1 + dx; i += (dx > 0 ? 1 : -1)) {
+        for (int j = y1; j != y1 + dy; j += (dy > 0 ? 1 : -1)) {
+            int x = i - x1 + x2;
+            int y = j - y1 + y2;
+            if (x >= 2 && x <= SNAKE_MAP_WIDTH - 1 && y >= 2 && y <= SNAKE_MAP_HEIGHT - 1) {
+                if (data->game_map[i][j] == &portal_block) {
+                    remove_portal(data, i, j);
+                }
+                if (data->game_map[x][y] == &portal_block) {
+                    remove_portal(data, x, y);
+                }
+                data->game_map[i][j] = data->game_map[x][y] = &portal_block;
+                data->transport_to[i][j] = (Pos){x, y};
+                data->transport_to[x][y] = (Pos){i, j};
+                show_block(&portal_block, i, j);
+                show_block(&portal_block, x, y);
+            }
+        }
+    }
+}
+
 void edit_snake_map(SnakeGameData* data) {
     set_color(BLACK, WHITE);
     puts("");
@@ -512,28 +559,44 @@ void edit_snake_map(SnakeGameData* data) {
         if (pos_y == SNAKE_MAP_HEIGHT + 1) {
             pos_y = 1;
         }
-        if (ch == 'h' && data->game_map[pos_x][pos_y] != &portal_block) {
-            for (int i = 2; i <= pos_x - 1; i ++) {
-                data->game_map[i][pos_y] = data->game_map[pos_x][pos_y];
-                show_block(data->game_map[i][pos_y], i, pos_y);
+        if (ch == 'h') {
+            if (data->game_map[pos_x][pos_y] == &portal_block) {
+                Pos p = data->transport_to[pos_x][pos_y];
+                if (p.x != 0 && pos_y != p.y) {
+                    assign_map_portal_block(data, pos_x - 1, pos_y, p.x - 1, p.y, 2 - pos_x + 1, 0);
+                }
+            } else {
+                assign_map_block(data, 2, pos_y, pos_x - 1, pos_y, data->game_map[pos_x][pos_y]);
             }
         }
-        if (ch == 'l' && data->game_map[pos_x][pos_y] != &portal_block) {
-            for (int i = pos_x + 1; i <= SNAKE_MAP_WIDTH - 1; i ++) {
-                data->game_map[i][pos_y] = data->game_map[pos_x][pos_y];
-                show_block(data->game_map[i][pos_y], i, pos_y);
+        if (ch == 'l') {
+            if (data->game_map[pos_x][pos_y] == &portal_block) {
+                Pos p = data->transport_to[pos_x][pos_y];
+                if (p.x != 0 && pos_y != p.y) {
+                    assign_map_portal_block(data, pos_x + 1, pos_y, p.x + 1, p.y, SNAKE_MAP_WIDTH - 1 - pos_x - 1, 0);
+                }
+            } else {
+                assign_map_block(data, pos_x + 1, pos_y, SNAKE_MAP_WIDTH - 1, pos_y, data->game_map[pos_x][pos_y]);
             }
         }
-        if (ch == 'k' && data->game_map[pos_x][pos_y] != &portal_block) {
-            for (int i = 2; i <= pos_y - 1; i ++) {
-                data->game_map[pos_x][i] = data->game_map[pos_x][pos_y];
-                show_block(data->game_map[pos_x][i], pos_x, i);
+        if (ch == 'k') {
+            if (data->game_map[pos_x][pos_y] == &portal_block) {
+                Pos p = data->transport_to[pos_x][pos_y];
+                if (p.x != 0 && pos_x != p.x) {
+                    assign_map_portal_block(data, pos_x, pos_y - 1, p.x, p.y - 1, 0, 2 - pos_y + 1);
+                }
+            } else {
+                assign_map_block(data, pos_x, 2, pos_x, pos_y - 1, data->game_map[pos_x][pos_y]);
             }
         }
-        if (ch == 'j' && data->game_map[pos_x][pos_y] != &portal_block) {
-            for (int i = pos_y + 1; i <= SNAKE_MAP_HEIGHT - 1; i ++) {
-                data->game_map[pos_x][i] = data->game_map[pos_x][pos_y];
-                show_block(data->game_map[pos_x][i], pos_x, i);
+        if (ch == 'j') {
+            if (data->game_map[pos_x][pos_y] == &portal_block) {
+                Pos p = data->transport_to[pos_x][pos_y];
+                if (p.x != 0 && pos_x != p.x) {
+                    assign_map_portal_block(data, pos_x, pos_y + 1, p.x, p.y + 1, 0, SNAKE_MAP_HEIGHT - 1 - pos_y - 1);
+                }
+            } else {
+                assign_map_block(data, pos_x, pos_y + 1, pos_x, SNAKE_MAP_HEIGHT - 1, data->game_map[pos_x][pos_y]);
             }
         }
         // 清除之前传送门高亮
@@ -559,10 +622,7 @@ void edit_snake_map(SnakeGameData* data) {
                 portal.x = -1;
             }
             if (!(cur_portal.x == 0 && cur_portal.y == 0)) {
-                data->transport_to[pos_x][pos_y] = (Pos){0, 0};
-                data->transport_to[cur_portal.x][cur_portal.y] = (Pos){0, 0};
-                data->game_map[cur_portal.x][cur_portal.y] = &empty_block;
-                show_block(&empty_block, cur_portal.x, cur_portal.y);
+                remove_portal(data, pos_x, pos_y);
             }
         }
         // 修改
