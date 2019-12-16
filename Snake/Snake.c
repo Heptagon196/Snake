@@ -6,6 +6,8 @@ const BlockType empty_block = {WHITE, WHITE, "  "};
 const BlockType wall_block = {WHITE, YELLOW, "  "};
 const BlockType snake_head_block = {WHITE, BLUE, "  "};
 const BlockType snake_body_block = {WHITE, GREEN, "  "};
+const BlockType editor_block = {WHITE, BLUE, "  "};
+const BlockType highlight_editor_block = {WHITE, LIGHT_BLUE, "  "};
 
 // random_portal_block 随机传送
 // portal_block 定向传送
@@ -14,12 +16,14 @@ const BlockType snake_body_block = {WHITE, GREEN, "  "};
 #if defined(linux) || defined(__APPLE__)
 const BlockType random_portal_block = {MAGENTA, WHITE, "◆ "};
 const BlockType portal_block = {CYAN, WHITE, "◆ "};
+const BlockType highlight_portal_block = {LIGHT_CYAN, WHITE, "◆ "};
 const BlockType food_block = {RED, WHITE, "● "};
 const BlockType eraser_block = {LIGHT_BLUE, WHITE, "▲ "};
 const BlockType additional_food_block[3] = {{LIGHT_RED, WHITE, "★ "}, {LIGHT_BLUE, WHITE, "★ "}, {LIGHT_GREEN, WHITE, "★ "}};
 #else
 const BlockType random_portal_block = {MAGENTA, WHITE, "◆"};
 const BlockType portal_block = {CYAN, WHITE, "◆"};
+const BlockType highlight_portal_block = {LIGHT_CYAN, WHITE, "◆"};
 const BlockType food_block = {RED, WHITE, "●"};
 const BlockType eraser_block = {LIGHT_BLUE, WHITE, "▲"};
 const BlockType additional_food_block[3] = {{LIGHT_RED, WHITE, "★"}, {LIGHT_BLUE, WHITE, "★"}, {LIGHT_GREEN, WHITE, "★"}};
@@ -479,7 +483,7 @@ void edit_snake_map(SnakeGameData* data) {
         move_cursor_origin(70, 15);
         set_color(WHITE, WHITE);
         ch = getch();
-        if (ch == 'q') {
+        if (ch == 'q' && portal.x == -1) {
             break;
         }
         int backup_x = pos_x;
@@ -533,7 +537,32 @@ void edit_snake_map(SnakeGameData* data) {
             }
         }
         show_block(data->game_map[backup_x][backup_y], backup_x, backup_y);
-        show_block(&snake_head_block, pos_x, pos_y);
+        if (portal.x == -1) {
+            show_block(&editor_block, pos_x, pos_y);
+        } else {
+            show_block(&highlight_editor_block, pos_x, pos_y);
+        }
+        // 定向传送门高亮
+        Pos cur_portal = data->transport_to[pos_x][pos_y];
+        if (cur_portal.x != 0) {
+            show_block(&highlight_portal_block, cur_portal.x, cur_portal.y);
+        }
+        // 清除之前传送门高亮
+        Pos prev_portal = data->transport_to[backup_x][backup_y];
+        if (prev_portal.x != 0) {
+            show_block(data->game_map[prev_portal.x][prev_portal.y], prev_portal.x, prev_portal.y);
+        }
+        // 删除定向传送门时删除对应的传送门
+        if (ch == '0' || ch == '1' || ch == '2') {
+            if (pos_x == portal.x && pos_y == portal.y) {
+                portal.x = -1;
+            }
+            if (!(cur_portal.x == 0 && cur_portal.y == 0)) {
+                data->game_map[cur_portal.x][cur_portal.y] = &empty_block;
+                show_block(&empty_block, cur_portal.x, cur_portal.y);
+            }
+        }
+        // 修改
         if (ch == '0') {
             data->game_map[pos_x][pos_y] = &empty_block;
         } else if (ch == '1') {
@@ -543,14 +572,13 @@ void edit_snake_map(SnakeGameData* data) {
         } else if (ch == '3') {
             data->game_map[pos_x][pos_y] = &portal_block;
             // 将每两次修改的定向传送门连接
-            if (portal.x == -1 && portal.y == -1) {
+            if (portal.x == -1) {
                 portal.x = pos_x;
                 portal.y = pos_y;
             } else {
                 data->transport_to[portal.x][portal.y] = (Pos){pos_x, pos_y};
                 data->transport_to[pos_x][pos_y] = (Pos){portal.x, portal.y};
                 portal.x = -1;
-                portal.y = -1;
             }
         } else {
             continue;
