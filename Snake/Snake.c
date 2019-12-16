@@ -375,6 +375,7 @@ void start_snake_game(SnakeGameData* data) {
         START_MOVE:;
         int backup_x = head_pos.x;
         int backup_y = head_pos.y;
+        // 改变方向
         if (ch == 'a') {
             head_pos.x --;
         }
@@ -387,6 +388,7 @@ void start_snake_game(SnakeGameData* data) {
         if (ch == 'w') {
             head_pos.y --;
         }
+        // 前方有墙或传送门
         if (data->game_map[head_pos.x][head_pos.y] == &wall_block) {
             break;
         }
@@ -402,39 +404,38 @@ void start_snake_game(SnakeGameData* data) {
             head_pos.y = transport_to.y;
             goto START_MOVE;
         }
-        if (head_pos.x != backup_x || head_pos.y != backup_y) {
-            int last_tail_x = SNAKEBODY_TAIL->x;
-            int last_tail_y = SNAKEBODY_TAIL->y;
-            if (data->game_map[head_pos.x][head_pos.y] == &food_block) {
-                move_head_to(data, head_pos.x, head_pos.y);
-                add_snake_body(data, last_tail_x, last_tail_y);
-                generate_food(data);
-                data->score += 1;
-                update_score(data);
-            } else if (data->game_map[head_pos.x][head_pos.y] == &eraser_block) {
-                if (data->snake->size <= 1) {
-                    break;
-                }
-                move_head_to(data, head_pos.x, head_pos.y);
-                pop_snake_body(data);
-            } else if (data->game_map[head_pos.x][head_pos.y] == &additional_food_block[0]) {
-                data->additional_food_pos.x = -1;
-                move_head_to(data, head_pos.x, head_pos.y);
-                add_snake_body(data, last_tail_x, last_tail_y);
-                // 清空进度条
-                set_color(WHITE, WHITE);
-                for (int l = PROGRESSBAR_Y - 2; l <= PROGRESSBAR_Y; l ++) {
-                    move_cursor(PROGRESSBAR_X, l);
-                    for (int i = 0; i < PROGRESSBAR_LEN; i ++) {
-                        putchar(' ');
-                    }
-                }
-                putchar('\n');
-                data->score += 5;
-                update_score(data);
-            } else {
-                move_head_to(data, head_pos.x, head_pos.y);
+        // 移动
+        int last_tail_x = SNAKEBODY_TAIL->x;
+        int last_tail_y = SNAKEBODY_TAIL->y;
+        if (data->game_map[head_pos.x][head_pos.y] == &food_block) {
+            move_head_to(data, head_pos.x, head_pos.y);
+            add_snake_body(data, last_tail_x, last_tail_y);
+            generate_food(data);
+            data->score += 1;
+            update_score(data);
+        } else if (data->game_map[head_pos.x][head_pos.y] == &eraser_block) {
+            if (data->snake->size <= 1) {
+                break;
             }
+            move_head_to(data, head_pos.x, head_pos.y);
+            pop_snake_body(data);
+        } else if (data->game_map[head_pos.x][head_pos.y] == &additional_food_block[0]) {
+            data->additional_food_pos.x = -1;
+            move_head_to(data, head_pos.x, head_pos.y);
+            add_snake_body(data, last_tail_x, last_tail_y);
+            // 清空进度条
+            set_color(WHITE, WHITE);
+            for (int l = PROGRESSBAR_Y - 2; l <= PROGRESSBAR_Y; l ++) {
+                move_cursor(PROGRESSBAR_X, l);
+                for (int i = 0; i < PROGRESSBAR_LEN; i ++) {
+                    putchar(' ');
+                }
+            }
+            putchar('\n');
+            data->score += 5;
+            update_score(data);
+        } else {
+            move_head_to(data, head_pos.x, head_pos.y);
         }
     }
     show_cursor();
