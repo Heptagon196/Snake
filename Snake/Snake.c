@@ -373,8 +373,6 @@ void start_snake_game(SnakeGameData* data) {
         }
         putchar('\n');
         START_MOVE:;
-        int backup_x = head_pos.x;
-        int backup_y = head_pos.y;
         // 改变方向
         if (ch == 'a') {
             head_pos.x --;
