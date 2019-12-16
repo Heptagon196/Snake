@@ -536,6 +536,12 @@ void edit_snake_map(SnakeGameData* data) {
                 show_block(data->game_map[pos_x][i], pos_x, i);
             }
         }
+        // 清除之前传送门高亮
+        Pos prev_portal = data->transport_to[backup_x][backup_y];
+        if (prev_portal.x != 0) {
+            show_block(data->game_map[prev_portal.x][prev_portal.y], prev_portal.x, prev_portal.y);
+        }
+        // 显示当前光标
         show_block(data->game_map[backup_x][backup_y], backup_x, backup_y);
         if (portal.x == -1) {
             show_block(&editor_block, pos_x, pos_y);
@@ -547,17 +553,14 @@ void edit_snake_map(SnakeGameData* data) {
         if (cur_portal.x != 0) {
             show_block(&highlight_portal_block, cur_portal.x, cur_portal.y);
         }
-        // 清除之前传送门高亮
-        Pos prev_portal = data->transport_to[backup_x][backup_y];
-        if (prev_portal.x != 0) {
-            show_block(data->game_map[prev_portal.x][prev_portal.y], prev_portal.x, prev_portal.y);
-        }
         // 删除定向传送门时删除对应的传送门
         if (ch == '0' || ch == '1' || ch == '2') {
             if (pos_x == portal.x && pos_y == portal.y) {
                 portal.x = -1;
             }
             if (!(cur_portal.x == 0 && cur_portal.y == 0)) {
+                data->transport_to[pos_x][pos_y] = (Pos){0, 0};
+                data->transport_to[cur_portal.x][cur_portal.y] = (Pos){0, 0};
                 data->game_map[cur_portal.x][cur_portal.y] = &empty_block;
                 show_block(&empty_block, cur_portal.x, cur_portal.y);
             }
@@ -578,6 +581,7 @@ void edit_snake_map(SnakeGameData* data) {
             } else {
                 data->transport_to[portal.x][portal.y] = (Pos){pos_x, pos_y};
                 data->transport_to[pos_x][pos_y] = (Pos){portal.x, portal.y};
+                show_block(&highlight_portal_block, portal.x, portal.y);
                 portal.x = -1;
             }
         } else {
