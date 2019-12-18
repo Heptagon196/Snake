@@ -1,10 +1,10 @@
 #include "Menu.h"
 
 typedef struct {
-    char* content;
+    const char* content;
 } Option;
 
-Option* new_option(char* content) {
+Option* new_option(const char* content) {
     Option* opt = (Option*)malloc(sizeof(Option));
     opt->content = content;
     return opt;
@@ -29,19 +29,16 @@ void print_normal(Option* option, int line) {
     print_to_middle(option->content, line + 2, 1);
 }
 
-int Menu(int count, int init_option, ...) {
-    // 可变参数列表
+int Menu(int count, int init_option, const char* option[]) {
     // 将所有参数依次放入链表中
     List* options = (List*)malloc(sizeof(List));
     init_list(options, destroy_option);
-    va_list params;
-    va_start(params, init_option);
-    char* title = va_arg(params, char*);
+
+    const char* title = option[0];
     count --;
-    for (int i = 0; i < count; i ++) {
-        list_append(options, new_option(va_arg(params, char*)));
+    for (int i = 1; i <= count; i ++) {
+        list_append(options, new_option(option[i]));
     }
-    va_end(params);
     
     set_color(BLACK, WHITE);
     puts("");

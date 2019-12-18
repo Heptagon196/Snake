@@ -22,7 +22,7 @@ int main() {
 #endif
     int option;
     while (true) {
-        option = Menu(6, 0, "SNAKE", "Start Game", "Edit Map", "Settings", "About", "Exit");
+        option = Menu(6, 0, (const char*[]){"SNAKE", "Start Game", "Edit Map", "Settings", "About", "Exit"});
         if (option == -1 || option == 4) {
             clear_screen();
             return 0;
@@ -34,7 +34,7 @@ int main() {
             set_color(BLACK, WHITE);
             hide_cursor();
             // 弹出输入框，未使用 esc 退出且输入非空时保存成绩
-            char* s = input_box(12, 2, "", "Game Over!", "Input your name:");
+            char* s = input_box(12, 2, "", (const char*[]){"Game Over!", "Input your name:"});
             if (s != NULL) {
                 if (strlen(s) != 0) {
                     rank_add_data(data->score_record, data->score, s);
@@ -60,7 +60,7 @@ int main() {
             hide_cursor();
             print_box(1, 1, SCREEN_WIDTH, SCREEN_HEIGHT);
             print_to_middle("Snake", 2, 1);
-            print_to_middle("by 刘奕江", 3, 1);
+            print_to_middle("by heptagon196", 3, 1);
             getch();
         }
         destroy_snake_game_data(data);

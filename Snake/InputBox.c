@@ -1,6 +1,6 @@
 #include "InputBox.h"
 
-char* input_box(int max_length, int message_count, const char* init_ans, ...) {
+char* input_box(int max_length, int message_count, const char* init_ans, const char* messages[]) {
     char* s = (char*)calloc(max_length + 1, sizeof(char));
 
     set_color(BLACK, WHITE);
@@ -17,13 +17,9 @@ char* input_box(int max_length, int message_count, const char* init_ans, ...) {
     }
 
     // 可变参数列表。依次获取提示语并居中输出
-    va_list messages;
-    va_start(messages, init_ans);
     for (int i = 0; i < message_count; i ++) {
-        const char* msg = va_arg(messages, const char*);
-        print_to_middle(msg, top_left_y + 2 + i, (SCREEN_WIDTH - strlen(msg)) / 2 - 1);
+        print_to_middle(messages[i], top_left_y + 2 + i, (SCREEN_WIDTH - strlen(messages[i])) / 2 - 1);
     }
-    va_end(messages);
 
     // 输出边框
     print_box(top_left_x, top_left_y, bottom_right_x, bottom_right_y);

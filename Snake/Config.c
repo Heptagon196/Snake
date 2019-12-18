@@ -29,14 +29,14 @@ void edit_config(SnakeGameData* data) {
         sprintf(conv, "%16.2lf", data->eraser_possibility);
         strcat(option_eraser_possibility, conv);
 
-        option = Menu(8, option, "Settings", option_map_file, option_rank_file, option_snake_speed, option_additional_food_lasting_time, option_additional_food_generate_time, option_eraser_possibility, "Back");
+        option = Menu(8, option, (const char*[]){"Settings", option_map_file, option_rank_file, option_snake_speed, option_additional_food_lasting_time, option_additional_food_generate_time, option_eraser_possibility, "Back"});
 
         if (option == -1 || option == 6) {
             clear_screen();
             return ;
         }
         if (option == 0) {
-            char* s = input_box(21, 1, data->map_filename, "Set path to the map:");
+            char* s = input_box(21, 1, data->map_filename, (const char*[]){"Set path to the map:"});
             if (s != NULL) {
                 if (strlen(s) > 0) {
                     strcpy(data->map_filename, s);
@@ -45,7 +45,7 @@ void edit_config(SnakeGameData* data) {
             }
         }
         if (option == 1) {
-            char* s = input_box(21, 1, data->rank_filename, "Set path to the rank file:");
+            char* s = input_box(21, 1, data->rank_filename, (const char*[]){"Set path to the rank file:"});
             if (s != NULL) {
                 if (strlen(s) > 0) {
                     strcpy(data->rank_filename, s);
@@ -54,7 +54,7 @@ void edit_config(SnakeGameData* data) {
             }
         }
         if (option == 2) {
-            char* s = input_box(21, 2, "", "Set the number of blocks", "the snake moves per second:");
+            char* s = input_box(21, 2, "", (const char*[]){"Set the number of blocks", "the snake moves per second:"});
             if (s != NULL) {
                 if (strlen(s) > 0) {
                     sscanf(s, "%lf", &data->speed);
@@ -63,7 +63,7 @@ void edit_config(SnakeGameData* data) {
             }
         }
         if (option == 3) {
-            char* s = input_box(21, 1, "", "Set a time limit for extra food:");
+            char* s = input_box(21, 1, "", (const char*[]){"Set a time limit for extra food:"});
             if (s != NULL) {
                 if (strlen(s) > 0) {
                     sscanf(s, "%d", &data->additional_food_lasting_time);
@@ -72,7 +72,7 @@ void edit_config(SnakeGameData* data) {
             }
         }
         if (option == 4) {
-            char* s = input_box(21, 2, "", "Set the time between", "the generation of extra food:");
+            char* s = input_box(21, 2, "", (const char*[]){"Set the time between", "the generation of extra food:"});
             if (s != NULL) {
                 if (strlen(s) > 0) {
                     sscanf(s, "%d", &data->additional_food_generate_time);
@@ -81,7 +81,7 @@ void edit_config(SnakeGameData* data) {
             }
         }
         if (option == 5) {
-            char* s = input_box(21, 2, "", "Set the possibility of", "the generation of eraser");
+            char* s = input_box(21, 2, "", (const char*[]){"Set the possibility of", "the generation of eraser"});
             if (s != NULL) {
                 if (strlen(s) > 0) {
                     sscanf(s, "%lf", &data->eraser_possibility);
