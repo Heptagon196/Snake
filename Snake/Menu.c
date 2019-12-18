@@ -29,13 +29,13 @@ void print_normal(Option* option, int line) {
     print_to_middle(option->content, line + 2, 1);
 }
 
-int Menu(int count, ...) {
+int Menu(int count, int init_option, ...) {
     // 可变参数列表
     // 将所有参数依次放入链表中
     List* options = (List*)malloc(sizeof(List));
     init_list(options, destroy_option);
     va_list params;
-    va_start(params, count);
+    va_start(params, init_option);
     char* title = va_arg(params, char*);
     count --;
     for (int i = 0; i < count; i ++) {
@@ -43,7 +43,6 @@ int Menu(int count, ...) {
     }
     va_end(params);
     
-    int ans = 0;
     set_color(BLACK, WHITE);
     puts("");
     clear_screen();
@@ -56,7 +55,8 @@ int Menu(int count, ...) {
         print_normal((Option*)i->value, option_cnt);
         option_cnt ++;
     }
-    print_chosen((Option*)get_list_val(options, 0), 1);
+    int ans = init_option;
+    print_chosen((Option*)get_list_val(options, ans), ans + 1);
     int ch = 0;
     while (true) {
         ch = getch();

@@ -20,7 +20,6 @@ typedef struct {
     const BlockType* game_map[SNAKE_MAP_WIDTH + 2][SNAKE_MAP_HEIGHT + 2];
     Pos transport_to[SNAKE_MAP_WIDTH + 2][SNAKE_MAP_HEIGHT + 2]; // 定向传送门
     double speed; // 控制游戏速度，read_in_seconds 函数的参数
-    const char* map_filename; // 地图文件文件名
     int additional_food_state; // 用于处理额外食物的闪烁
     Pos additional_food_pos; // 额外食物位置
     int additional_food_lasting_time; // 额外食物持续时间
@@ -28,13 +27,14 @@ typedef struct {
     double eraser_possibility; // eraser 伴随食物生成的概率
     int score; // 得分
     Rank* score_record; // 排行榜
-    const char* rank_filename; // 排行榜文件名
+    char map_filename[256]; // 地图文件文件名
+    char rank_filename[256]; // 排行榜文件名
 } SnakeGameData;
 
 void load_snake_map(SnakeGameData* data);
 void save_snake_map(SnakeGameData* data);
 
-void init_snake_game_data(SnakeGameData* data, const char* map_filename, const char* rank_filename, double snake_speed, int additional_food_lasting_time, int additional_food_generate_time, double eraser_possibility);
+void init_snake_game_data(SnakeGameData* data, const char* config_filename);
 void destroy_snake_game_data(SnakeGameData* data);
 
 void start_snake_game(SnakeGameData* data);

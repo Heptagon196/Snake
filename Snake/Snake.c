@@ -115,16 +115,54 @@ void save_snake_map(SnakeGameData* data) {
     fclose(fp);
 }
 
-void init_snake_game_data(SnakeGameData* data, const char* map_filename, const char* rank_filename, double snake_speed, int additional_food_lasting_time, int additional_food_generate_time, double eraser_possibility) {
-    data->map_filename = map_filename;
-    data->rank_filename = rank_filename;
+void load_config_file(SnakeGameData* data, const char* config_filename) {
+    FILE* fp = fopen(config_filename, "r");
+    if (fp == NULL) {
+        fprintf(stderr, "Error: config file not found.\n");
+        exit(EXIT_FAILURE);
+    }
+    while (!feof(fp)) {
+        char op[256], content[256];
+        // 读入两个以 = 分隔的字符串并舍去末尾换行符
+        fscanf(fp, "%[^=]=%[^\n]%*c", op, content);
+        if (!strcmp(op, "map_file")) {
+            strcpy(data->map_filename, content);
+        } else if (!strcmp(op, "rank_file")) {
+            strcpy(data->rank_filename, content);
+        } else if (!strcmp(op, "snake_speed")) {
+            double d;
+            sscanf(content, "%lf", &d);
+            data->speed = d;
+        } else if (!strcmp(op, "additional_food_lasting_time")) {
+            int t;
+            sscanf(content, "%d", &t);
+            data->additional_food_lasting_time = t;
+        } else if (!strcmp(op, "additional_food_generate_time")) {
+            int t;
+            sscanf(content, "%d", &t);
+            data->additional_food_generate_time = t;
+        } else if (!strcmp(op, "eraser_possibility")) {
+            double p;
+            sscanf(content, "%lf", &p);
+            data->eraser_possibility = p;
+        }
+    }
+    fclose(fp);
+}
+
+void init_snake_game_data(SnakeGameData* data, const char* config_filename) {
+    // 设置默认值
+    memset(data->map_filename, 0, sizeof(data->map_filename));
+    memset(data->rank_filename, 0, sizeof(data->rank_filename));
+    data->speed = 7;
+    data->additional_food_lasting_time = 7;
+    data->additional_food_generate_time = 20;
+    data->eraser_possibility = 0.25;
+
+    load_config_file(data, config_filename);
+
     data->additional_food_state = 0;
     data->additional_food_pos.x = -1;
-
-    data->speed = snake_speed;
-    data->additional_food_lasting_time = additional_food_lasting_time;
-    data->additional_food_generate_time = additional_food_generate_time;
-    data->eraser_possibility = eraser_possibility;
 
     data->score = 0;
 
@@ -314,7 +352,7 @@ void start_snake_game(SnakeGameData* data) {
         // 移动到一个空白位置并将前景色后景色均设为白色，避免用户多余的按键显示在界面上
         move_cursor_origin(70, 15);
         set_color(WHITE, WHITE);
-        ch = read_in_seconds(data->speed);
+        ch = read_in_seconds(1.0 / data->speed);
         // 禁止改变后方向与原方向相反
 #define OPPOSITE(a, b) (((a) == 'w' && (b) == 's') || ((a) == 'a' && (b) == 'd'))
         if (OPPOSITE(ch, last_ch) || OPPOSITE(last_ch, ch)) {
