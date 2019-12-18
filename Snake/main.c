@@ -22,8 +22,8 @@ int main() {
 #endif
     int option;
     while (true) {
-        option = Menu(5, 0, "SNAKE", "Start Game", "Edit Map", "Settings", "Exit");
-        if (option == -1 || option == 3) {
+        option = Menu(6, 0, "SNAKE", "Start Game", "Edit Map", "Settings", "About", "Exit");
+        if (option == -1 || option == 4) {
             clear_screen();
             return 0;
         }
@@ -52,6 +52,16 @@ int main() {
         if (option == 2) {
             edit_config(data);
             save_config(data, CONFIG_FILENAME);
+        }
+        if (option == 3) {
+            set_color(BLACK, WHITE);
+            puts("");
+            clear_screen();
+            hide_cursor();
+            print_box(1, 1, SCREEN_WIDTH, SCREEN_HEIGHT);
+            print_to_middle("Snake", 2, 1);
+            print_to_middle("by 刘奕江", 3, 1);
+            getch();
         }
         destroy_snake_game_data(data);
         clear_screen();

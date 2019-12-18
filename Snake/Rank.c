@@ -24,10 +24,12 @@ void rank_add_data(Rank* rk, int score, char* name) {
 
 #define score(a) ((RankData*)a->value)->score
 #define name(a) ((RankData*)a->value)->name
-// 选择排序
+// 冒泡排序
 void rank_sort(Rank* rk) {
-    for (ListNode* a = rk->scores->head; a != NULL; a = a->next_node) {
-        for (ListNode* b = a->next_node; b != NULL; b = b->next_node) {
+    for (int i = 0; i < rk->scores->size - 1; i ++) {
+        ListNode* a = rk->scores->head;
+        for (int j = 0; j < rk->scores->size - 1 - i; j ++) {
+            ListNode* b = a->next_node;
             if (score(a) < score(b)) {
                 // 交换
                 int tmp_score = score(b);
@@ -37,6 +39,7 @@ void rank_sort(Rank* rk) {
                 score(a) = tmp_score;
                 name(a) = tmp_name;
             }
+            a = a->next_node;
         }
     }
 }
