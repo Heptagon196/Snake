@@ -6,7 +6,7 @@
 #if defined(linux) || defined(__APPLE__)
 #define BLOCK_TYPE(foreground, background, content) {foreground, background, content " "}
 #else
-#define BLOCK_TYPE(foreground, background, content) {foreground, background, content}
+#define BLOCK_TYPE(foreground, background, content) {foreground, background, ((content[0] > 0 && content[0] < 128) ? (content " ") : content)}
 #endif
 
 #define REGISTER_BLOCK_TYPE(block_name, foreground, background, content) const BlockType block_name = BLOCK_TYPE(foreground, background, content);
