@@ -121,9 +121,22 @@ double get_time() {
     return (double) clock() / CLOCKS_PER_SEC + extra_time;
 }
 
+// 中文字符在 UTF-8 编码中占三个字符
+int strlen_zh_cn(const char* s) {
+    int len = 0;
+    int cnt = 0;
+    for (int i = 0; s[i] != '\0'; i ++) {
+        len ++;
+        if (s[i] < 0) {
+            cnt ++;
+        }
+    }
+    return len - cnt / 3;
+}
+
 void print_to_middle(const char* content, int line, int dis_to_edge) {
-    int left_spaces_count = (SCREEN_WIDTH - strlen(content)) / 2;
-    int right_spaces_count = SCREEN_WIDTH - left_spaces_count - strlen(content);
+    int left_spaces_count = (SCREEN_WIDTH - strlen_zh_cn(content)) / 2;
+    int right_spaces_count = SCREEN_WIDTH - left_spaces_count - strlen_zh_cn(content);
     left_spaces_count -= dis_to_edge;
     right_spaces_count -= dis_to_edge;
     move_cursor_origin(1 + dis_to_edge, line);

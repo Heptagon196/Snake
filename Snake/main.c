@@ -22,7 +22,7 @@ int main() {
 #endif
     int option;
     while (true) {
-        option = Menu(6, 0, (const char*[]){"SNAKE", "Start Game", "Edit Map", "Settings", "About", "Exit"});
+        option = Menu(5, 0, "SNAKE", (const char*[]){"Start Game", "Edit Map", "Settings", "About", "Exit"});
         if (option == -1 || option == 4) {
             clear_screen();
             return 0;
@@ -59,8 +59,8 @@ int main() {
             clear_screen();
             hide_cursor();
             print_box(1, 1, SCREEN_WIDTH, SCREEN_HEIGHT);
-            print_to_middle("Snake", 2, 1);
-            print_to_middle("by heptagon196", 3, 1);
+            print_to_middle("Snake", SCREEN_HEIGHT / 2 - 1, 1);
+            print_to_middle("by heptagon196", SCREEN_HEIGHT / 2 + 1, 1);
             getch();
         }
         destroy_snake_game_data(data);

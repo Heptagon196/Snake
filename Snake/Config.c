@@ -29,7 +29,7 @@ void edit_config(SnakeGameData* data) {
         sprintf(conv, "%16.2lf", data->eraser_possibility);
         strcat(option_eraser_possibility, conv);
 
-        option = Menu(8, option, (const char*[]){"Settings", option_map_file, option_rank_file, option_snake_speed, option_additional_food_lasting_time, option_additional_food_generate_time, option_eraser_possibility, "Back"});
+        option = Menu(7, option, "Settings", (const char*[]){option_map_file, option_rank_file, option_snake_speed, option_additional_food_lasting_time, option_additional_food_generate_time, option_eraser_possibility, "Back"});
 
         if (option == -1 || option == 6) {
             clear_screen();

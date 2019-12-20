@@ -2,32 +2,29 @@
 
 #define Min(a, b) ((a) > (b) ? (b) : (a))
 
-const BlockType empty_block = {WHITE, WHITE, "  "};
-const BlockType wall_block = {WHITE, YELLOW, "  "};
-const BlockType snake_head_block = {WHITE, BLUE, "  "};
-const BlockType snake_body_block = {WHITE, GREEN, "  "};
-const BlockType editor_block = {WHITE, BLUE, "  "};
-const BlockType highlight_editor_block = {WHITE, LIGHT_BLUE, "  "};
-
-// random_portal_block 随机传送
-// portal_block 定向传送
-
 // linux 下以下特殊字符虽然显示出了两个字符的长度，但只占据了一个字符的位置，需要补上一个空格
 #if defined(linux) || defined(__APPLE__)
-const BlockType random_portal_block = {MAGENTA, WHITE, "◆ "};
-const BlockType portal_block = {CYAN, WHITE, "◆ "};
-const BlockType highlight_portal_block = {LIGHT_CYAN, WHITE, "◆ "};
-const BlockType food_block = {RED, WHITE, "● "};
-const BlockType eraser_block = {LIGHT_BLUE, WHITE, "▲ "};
-const BlockType additional_food_block[3] = {{LIGHT_RED, WHITE, "★ "}, {LIGHT_BLUE, WHITE, "★ "}, {LIGHT_GREEN, WHITE, "★ "}};
+#define BLOCK_TYPE(foreground, background, content) {foreground, background, content " "}
 #else
-const BlockType random_portal_block = {MAGENTA, WHITE, "◆"};
-const BlockType portal_block = {CYAN, WHITE, "◆"};
-const BlockType highlight_portal_block = {LIGHT_CYAN, WHITE, "◆"};
-const BlockType food_block = {RED, WHITE, "●"};
-const BlockType eraser_block = {LIGHT_BLUE, WHITE, "▲"};
-const BlockType additional_food_block[3] = {{LIGHT_RED, WHITE, "★"}, {LIGHT_BLUE, WHITE, "★"}, {LIGHT_GREEN, WHITE, "★"}};
+#define BLOCK_TYPE(foreground, background, content) {foreground, background, content}
 #endif
+
+#define REGISTER_BLOCK_TYPE(block_name, foreground, background, content) const BlockType block_name = BLOCK_TYPE(foreground, background, content);
+
+REGISTER_BLOCK_TYPE(empty_block, WHITE, WHITE, " ");
+REGISTER_BLOCK_TYPE(wall_block, WHITE, YELLOW, " ");
+REGISTER_BLOCK_TYPE(snake_head_block, WHITE, BLUE, " ");
+REGISTER_BLOCK_TYPE(snake_body_block, WHITE, GREEN, " ");
+REGISTER_BLOCK_TYPE(editor_block, WHITE, BLUE, " ");
+REGISTER_BLOCK_TYPE(highlight_editor_block, WHITE, LIGHT_BLUE, " ");
+// random_portal_block 随机传送
+// portal_block 定向传送
+REGISTER_BLOCK_TYPE(random_portal_block, MAGENTA, WHITE, "◆");
+REGISTER_BLOCK_TYPE(portal_block, CYAN, WHITE, "◆");
+REGISTER_BLOCK_TYPE(highlight_portal_block, LIGHT_CYAN, WHITE, "◆");
+REGISTER_BLOCK_TYPE(food_block, RED, WHITE, "●");
+REGISTER_BLOCK_TYPE(eraser_block, LIGHT_BLUE, WHITE, "▲");
+const BlockType additional_food_block[3] = {BLOCK_TYPE(LIGHT_RED, WHITE, "★"), BLOCK_TYPE(LIGHT_BLUE, WHITE, "★"), BLOCK_TYPE(LIGHT_GREEN, WHITE, "★")};
 
 int randint(int m) {
     return rand() % m;
@@ -369,6 +366,7 @@ void start_snake_game(SnakeGameData* data) {
         }
 #undef is_legal
         last_ch = ch;
+        // 输入 q 退出
         if (ch == 'q') {
             break;
         }

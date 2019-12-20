@@ -7,6 +7,6 @@
 #include "List.h"
 
 // 显示有 count 个选项的菜单
-int Menu(int count, int init_option, const char* options[]);
+int Menu(int count, int init_option, const char* title, const char* options[]);
 
 #endif
