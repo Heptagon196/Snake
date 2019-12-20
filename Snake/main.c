@@ -20,9 +20,9 @@ int main() {
 	COORD size = {width, height};
 	SetConsoleScreenBufferSize(handle, size);
 #endif
-    int option;
+    int option = 0;
     while (true) {
-        option = Menu(5, 0, "SNAKE", (const char*[]){"Start Game", "Edit Map", "Settings", "About", "Exit"});
+        option = Menu(5, option, "SNAKE", (const char*[]){"Start Game", "Edit Map", "Settings", "About", "Exit"});
         if (option == -1 || option == 4) {
             clear_screen();
             return 0;
