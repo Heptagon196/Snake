@@ -3,31 +3,19 @@
 void edit_config(SnakeGameData* data) {
     int option = 0;
     while (true) {
-        char conv[256];
+        char option_map_file[256];
+        char option_rank_file[256];
+        char option_snake_speed[256];
+        char option_additional_food_lasting_time[256];
+        char option_additional_food_generate_time[256];
+        char option_eraser_possibility[256];
 
-        char option_map_file[256] = "Map file: ";
-        sprintf(conv, "%25s", data->map_filename);
-        strcat(option_map_file, conv);
-
-        char option_rank_file[256] = "Rank file: ";
-        sprintf(conv, "%24s", data->rank_filename);
-        strcat(option_rank_file, conv);
-        
-        char option_snake_speed[256] = "Snake speed: ";
-        sprintf(conv, "%22.2lf", data->speed);
-        strcat(option_snake_speed, conv);
-
-        char option_additional_food_lasting_time[256] = "Extra food existing time: ";
-        sprintf(conv, "%9d", data->additional_food_lasting_time);
-        strcat(option_additional_food_lasting_time, conv);
-
-        char option_additional_food_generate_time[256] = "Extra food generation time: ";
-        sprintf(conv, "%7d", data->additional_food_generate_time);
-        strcat(option_additional_food_generate_time, conv);
-
-        char option_eraser_possibility[256] = "Eraser generation: ";
-        sprintf(conv, "%16.2lf", data->eraser_possibility);
-        strcat(option_eraser_possibility, conv);
+        sprintf(option_map_file, "Map file: %25s", data->map_filename);
+        sprintf(option_rank_file, "Rank file: %24s", data->rank_filename);
+        sprintf(option_snake_speed, "Snake speed: %22.2lf", data->speed);
+        sprintf(option_additional_food_lasting_time, "Extra food existing time: %9d", data->additional_food_lasting_time);
+        sprintf(option_additional_food_generate_time, "Extra food generation time: %7d", data->additional_food_generate_time);
+        sprintf(option_eraser_possibility, "Eraser generation: %16.2lf", data->eraser_possibility);
 
         option = Menu(7, option, "Settings", (const char*[]){option_map_file, option_rank_file, option_snake_speed, option_additional_food_lasting_time, option_additional_food_generate_time, option_eraser_possibility, "Back"});
 
