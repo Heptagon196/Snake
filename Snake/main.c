@@ -32,7 +32,6 @@ int main() {
         if (option == 0) {
             start_snake_game(data);
             set_color(BLACK, WHITE);
-            hide_cursor();
             // 弹出输入框，未使用 esc 退出且输入非空时保存成绩
             char* s = input_box(12, 2, "", (const char*[]){"Game Over!", "Input your name:"});
             if (s != NULL) {

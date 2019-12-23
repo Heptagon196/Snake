@@ -3,6 +3,7 @@
 void print_chosen(const char* option, int line) {
     set_color(WHITE, YELLOW);
     print_to_middle(option, line + 2, 1);
+    // line + 2 分别是因为边框、标题
 }
 
 void print_normal(const char* option, int line) {
@@ -21,10 +22,8 @@ int Menu(int count, int init_option, const char* title, const char* option[]) {
 
     set_color(BLUE, WHITE);
     print_to_middle(title, 2, 2);
-    int option_cnt = 1;
     for (int i = 0; i < count; i ++) {
-        print_normal(option[i], option_cnt);
-        option_cnt ++;
+        print_normal(option[i], i + 1);
     }
     int ans = init_option;
     print_chosen(option[ans], ans + 1);
