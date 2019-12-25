@@ -37,7 +37,7 @@ int main() {
             if (s != NULL) {
                 if (strlen(s) != 0) {
                     rank_add_data(data->score_record, data->score, s);
-                    save_rank(data->score_record, data->rank_filename);
+                    rank_save(data->score_record, data->rank_filename);
                 } else {
                     free(s);
                 }

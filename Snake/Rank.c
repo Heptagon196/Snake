@@ -5,21 +5,24 @@ void destroy_rank_data(void* val) {
     free((RankData*)val);
 }
 
-void init_rank(Rank* rk) {
-    rk->scores = (List*)malloc(sizeof(List));
-    init_list(rk->scores, destroy_rank_data);
+void* new_rank_data() {
+    return malloc(sizeof(RankData));
 }
 
-void destroy_rank(Rank* rk) {
-    destroy_list(rk->scores);
+void rank_init(Rank* rk) {
+    rk->scores = (List*)malloc(sizeof(List));
+    list_init(rk->scores, new_rank_data, destroy_rank_data);
+}
+
+void rank_destroy(Rank* rk) {
+    list_destroy(rk->scores);
     free(rk);
 }
 
 void rank_add_data(Rank* rk, int score, char* name) {
-    RankData* data = (RankData*)malloc(sizeof(RankData));
-    data->score = score;
-    data->name = name;
-    list_append(rk->scores, data);
+    list_append(rk->scores);
+    list_tail(rk->scores, RankData)->score = score;
+    list_tail(rk->scores, RankData)->name = name;
 }
 
 #define score(a) ((RankData*)a->value)->score
@@ -27,9 +30,9 @@ void rank_add_data(Rank* rk, int score, char* name) {
 // 冒泡排序
 void rank_sort(Rank* rk) {
     for (int i = 0; i < rk->scores->size - 1; i ++) {
-        ListNode* a = rk->scores->head;
+        ListIterator* a = rk->scores->head;
         for (int j = 0; j < rk->scores->size - 1 - i; j ++) {
-            ListNode* b = a->next_node;
+            ListIterator* b = a->next_node;
             if (score(a) < score(b)) {
                 // 交换
                 int tmp_score = score(b);
@@ -44,15 +47,15 @@ void rank_sort(Rank* rk) {
     }
 }
 
-void save_rank(Rank* rk, const char* filename) {
+void rank_save(Rank* rk, const char* filename) {
     FILE* fp = fopen(filename, "w");
-    for (ListNode* i = rk->scores->head; i != NULL; i = i->next_node) {
+    for (ListIterator* i = rk->scores->head; i != NULL; i = i->next_node) {
         fprintf(fp, "%s\n%d\n", name(i), score(i));
     }
     fclose(fp);
 }
 
-void load_rank(Rank* rk, const char* filename) {
+void rank_load(Rank* rk, const char* filename) {
     FILE* fp = fopen(filename, "r");
     if (fp == NULL) {
         return ;

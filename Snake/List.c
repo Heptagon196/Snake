@@ -1,18 +1,19 @@
 #include "List.h"
 
-void init_list(List* lst, destroy_func* func) {
+void list_init(List* lst, init_func* init, destroy_func* func) {
     lst->size = 0;
     lst->head = NULL;
     lst->tail = NULL;
     lst->destroy = func;
+    lst->init = init;
 }
 
-ListNode* list_get(List* lst, int pos) {
+ListIterator* list_node_get(List* lst, int pos) {
     if (pos >= lst->size || pos < 0) {
         fprintf(stderr, "Error: Unable to get a value at pos %d in a list of size %d.\n", pos, lst->size);
         return NULL;
     }
-    ListNode* cur;
+    ListIterator* cur;
     // 判断 pos 更靠近开头还是结尾，并选择从头部还是尾部考试遍历，提高效率
     if (pos < lst->size / 2) {
         cur = lst->head;
@@ -28,9 +29,9 @@ ListNode* list_get(List* lst, int pos) {
     return cur;
 }
 
-void list_insert(List* lst, void* val, int pos) {
-    ListNode* new_node = (ListNode*)malloc(sizeof(ListNode));
-    new_node->value = val;
+void list_insert(List* lst, int pos) {
+    ListIterator* new_node = (ListIterator*)malloc(sizeof(ListIterator));
+    new_node->value = lst->init();
     // pos 为 0 时找不到 pos - 1 位置，单独处理
     if (pos == 0) {
         new_node->next_node = lst->head;
@@ -45,7 +46,7 @@ void list_insert(List* lst, void* val, int pos) {
         lst->size ++;
         return ;
     }
-    ListNode* prev = list_get(lst, pos - 1);
+    ListIterator* prev = list_node_get(lst, pos - 1);
     new_node->next_node = prev->next_node;
     new_node->prev_node = prev;
     if (prev->next_node != NULL) {
@@ -58,7 +59,7 @@ void list_insert(List* lst, void* val, int pos) {
 }
 
 void list_delete(List* lst, int pos) {
-    ListNode* cur = list_get(lst, pos);
+    ListIterator* cur = list_node_get(lst, pos);
     if (cur->prev_node != NULL) {
         cur->prev_node->next_node = cur->next_node;
     } else {
@@ -74,10 +75,10 @@ void list_delete(List* lst, int pos) {
     free(cur);
 }
 
-void destroy_list(List* lst) {
-    ListNode* cur = lst->head;
+void list_destroy(List* lst) {
+    ListIterator* cur = lst->head;
     while (cur != NULL) {
-        ListNode* to_destroy = cur;
+        ListIterator* to_destroy = cur;
         cur = cur->next_node;
         lst->destroy(to_destroy->value);
         free(to_destroy);

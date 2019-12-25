@@ -13,11 +13,11 @@ typedef struct {
     List* scores;
 } Rank;
 
-void init_rank(Rank* rk);
-void destroy_rank(Rank* rk);
+void rank_init(Rank* rk);
+void rank_destroy(Rank* rk);
 void rank_add_data(Rank* rk, int score, char* name);
 void rank_sort(Rank* rk);
-void save_rank(Rank* rk, const char* filename);
-void load_rank(Rank* rk, const char* filename);
+void rank_save(Rank* rk, const char* filename);
+void rank_load(Rank* rk, const char* filename);
 
 #endif

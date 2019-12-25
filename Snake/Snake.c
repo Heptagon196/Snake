@@ -50,15 +50,12 @@ int read_in_seconds(double lasting_time) {
     return getch();
 }
 
-Pos* new_snake_body(int x, int y) {
-    Pos* new_body = (Pos*)malloc(sizeof(Pos));
-    new_body->x = x;
-    new_body->y = y;
-    return new_body;
-}
-
 void destroy_pos(void* val) {
     free((Pos*)val);
+}
+
+void* new_pos() {
+    return malloc(sizeof(Pos));
 }
 
 void load_snake_map(SnakeGameData* data) {
@@ -78,10 +75,10 @@ void load_snake_map(SnakeGameData* data) {
             int x, y;
             fscanf(fp, "%d %d", &x, &y);
             data->game_map[x][y] = &random_portal_block;
-            Pos* new_portal = (Pos*)malloc(sizeof(Pos));
+            list_append(data->random_portals);
+            Pos* new_portal = list_tail(data->random_portals, Pos);
             new_portal->x = x;
             new_portal->y = y;
-            list_append(data->random_portals, new_portal);
         }
         if (operation == 3) {
             int x1, y1, x2, y2;
@@ -164,13 +161,13 @@ void init_snake_game_data(SnakeGameData* data, const char* config_filename) {
     data->score = 0;
 
     data->snake = (List*)malloc(sizeof(List));
-    init_list(data->snake, destroy_pos);
+    list_init(data->snake, new_pos, destroy_pos);
 
     data->random_portals = (List*)malloc(sizeof(List));
-    init_list(data->random_portals, destroy_pos);
+    list_init(data->random_portals, new_pos, destroy_pos);
 
     data->score_record = (Rank*)malloc(sizeof(Rank));
-    init_rank(data->score_record);
+    rank_init(data->score_record);
 
     for (int i = 0; i < SNAKE_MAP_WIDTH + 2; i ++) {
         for (int j = 0; j < SNAKE_MAP_HEIGHT + 2; j ++) {
@@ -189,13 +186,13 @@ void init_snake_game_data(SnakeGameData* data, const char* config_filename) {
     load_snake_map(data);
 
     // 读取 rank
-    load_rank(data->score_record, data->rank_filename);
+    rank_load(data->score_record, data->rank_filename);
 }
 
 void destroy_snake_game_data(SnakeGameData* data) {
-    destroy_list(data->snake);
-    destroy_list(data->random_portals);
-    destroy_rank(data->score_record);
+    list_destroy(data->snake);
+    list_destroy(data->random_portals);
+    rank_destroy(data->score_record);
     free(data);
 }
 
@@ -231,28 +228,25 @@ void generate_food(SnakeGameData* data) {
     }
 }
 
-#define SNAKEBODY_TAIL ((Pos*)data->snake->tail->value)
-#define SNAKEBODY_HEAD ((Pos*)data->snake->head->value)
-
 void add_snake_body(SnakeGameData* data, int x, int y) {
-    Pos* new_body = (Pos*)malloc(sizeof(Pos));
+    list_append(data->snake);
+    Pos* new_body = list_tail(data->snake, Pos);
     new_body->x = x;
     new_body->y = y;
     data->game_map[x][y] = &wall_block;
-    list_append(data->snake, new_body);
     show_block(&snake_body_block, x, y);
 }
 
 void pop_snake_body(SnakeGameData* data) {
-    data->game_map[SNAKEBODY_TAIL->x][SNAKEBODY_TAIL->y] = &empty_block;
-    show_block(&empty_block, SNAKEBODY_TAIL->x, SNAKEBODY_TAIL->y);
+    data->game_map[list_tail(data->snake, Pos)->x][list_tail(data->snake, Pos)->y] = &empty_block;
+    show_block(&empty_block, list_tail(data->snake, Pos)->x, list_tail(data->snake, Pos)->y);
     set_color(BLACK, WHITE);
     list_pop(data->snake);
 }
 
 // 将尾部节点改为头部节点并移动至 x, y 位置
 void move_head_to(SnakeGameData* data, int x, int y) {
-    Pos* tail = SNAKEBODY_TAIL;
+    Pos* tail = list_tail(data->snake, Pos);
     int hide_x = tail->x;
     int hide_y = tail->y;
     data->game_map[tail->x][tail->y] = &empty_block;
@@ -262,15 +256,19 @@ void move_head_to(SnakeGameData* data, int x, int y) {
     data->game_map[tail->x][tail->y] = &wall_block;
     if (data->snake->size > 1) {
         set_color(BLACK, WHITE);
-        show_block(&snake_body_block, SNAKEBODY_HEAD->x, SNAKEBODY_HEAD->y);
-        ListNode* next_tail_node = data->snake->tail->prev_node;
-        ListNode* last_tail_node = data->snake->tail;
-        data->snake->head->prev_node = data->snake->tail;
-        data->snake->tail->prev_node->next_node = NULL;
-        data->snake->tail->prev_node = NULL;
-        data->snake->tail->next_node = data->snake->head;
-        data->snake->tail = next_tail_node;
-        data->snake->head = last_tail_node;
+        show_block(&snake_body_block, list_head(data->snake, Pos)->x, list_head(data->snake, Pos)->y);
+#define HEAD data->snake->head
+#define TAIL data->snake->tail
+        ListIterator* next_tail_node = TAIL->prev_node;
+        ListIterator* last_tail_node = TAIL;
+        HEAD->prev_node = TAIL;
+        TAIL->prev_node->next_node = NULL;
+        TAIL->prev_node = NULL;
+        TAIL->next_node = HEAD;
+        TAIL = next_tail_node;
+        HEAD = last_tail_node;
+#undef HEAD
+#undef TAIL
     }
     show_block(data->game_map[hide_x][hide_y], hide_x, hide_y);
 }
@@ -317,7 +315,7 @@ void start_snake_game(SnakeGameData* data) {
     move_cursor(SNAKE_MAP_WIDTH + 2, 7);
     set_color(BLACK, WHITE);
     printf("        Rank        \n");
-    ListNode* cur = data->score_record->scores->head;
+    ListIterator* cur = data->score_record->scores->head;
     for (int l = 9; l <= PROGRESSBAR_Y - 5 && cur != NULL; l ++, cur = cur->next_node) {
         move_cursor(SNAKE_MAP_WIDTH + 2, l);
         printf("  %s", ((RankData*)cur->value)->name);
@@ -335,7 +333,7 @@ void start_snake_game(SnakeGameData* data) {
 
     Pos head_pos = get_random_pos(data, 4);
     add_snake_body(data, head_pos.x, head_pos.y);
-    show_block(&snake_head_block, SNAKEBODY_HEAD->x, SNAKEBODY_HEAD->y);
+    show_block(&snake_head_block, list_head(data->snake, Pos)->x, list_head(data->snake, Pos)->y);
     generate_food(data);
 
     // 起始时随机方向
@@ -351,20 +349,16 @@ void start_snake_game(SnakeGameData* data) {
         set_color(WHITE, WHITE);
         ch = read_in_seconds(1.0 / data->speed);
         // 禁止改变后方向与原方向相反
-#define OPPOSITE(a, b) (((a) == 'w' && (b) == 's') || ((a) == 'a' && (b) == 'd'))
-        if (OPPOSITE(ch, last_ch) || OPPOSITE(last_ch, ch)) {
+        if (abs(last_ch - ch) <= 4) {
             ch = last_ch;
         }
-#undef OPPOSITE
         if (ch == 0) {
             ch = last_ch;
         }
         // 输入无效时忽略
-#define is_legal(ch) ((ch == 'q') || (ch == 'w') || (ch == 's') || (ch == 'a') || (ch == 'd'))
-        if (!is_legal(ch)) {
+        if (!((ch == 'q') || (ch == 'w') || (ch == 's') || (ch == 'a') || (ch == 'd'))) {
             ch = last_ch;
         }
-#undef is_legal
         last_ch = ch;
         // 输入 q 退出
         if (ch == 'q') {
@@ -430,7 +424,7 @@ void start_snake_game(SnakeGameData* data) {
             break;
         }
         if (data->game_map[head_pos.x][head_pos.y] == &random_portal_block) {
-            Pos* transport_to = (Pos*)get_list_val(data->random_portals, randint(data->random_portals->size));
+            Pos* transport_to = list_at(data->random_portals, randint(data->random_portals->size), Pos);
             head_pos.x = transport_to->x;
             head_pos.y = transport_to->y;
             goto START_MOVE;
@@ -442,8 +436,8 @@ void start_snake_game(SnakeGameData* data) {
             goto START_MOVE;
         }
         // 移动
-        int last_tail_x = SNAKEBODY_TAIL->x;
-        int last_tail_y = SNAKEBODY_TAIL->y;
+        int last_tail_x = list_tail(data->snake, Pos)->x;
+        int last_tail_y = list_tail(data->snake, Pos)->y;
         if (data->game_map[head_pos.x][head_pos.y] == &food_block) {
             move_head_to(data, head_pos.x, head_pos.y);
             add_snake_body(data, last_tail_x, last_tail_y);
